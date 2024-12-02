@@ -11,6 +11,7 @@
         "moduleResolution": "node",
 
         "outDir": "./dist",
+        "rootDir": "./src",
 
         "esModuleInterop": true, /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */
         
@@ -28,12 +29,10 @@
         "allowUnreachableCode" : true, // 도달할 수 없는 코드 허용
         
         "skipLibCheck": true, /* Skip type checking all .d.ts files. */
-
         "declaration": true,
         "declarationMap": true
     },
     "include": [
-        "./src/**/*",
-        "./electron.d.ts"
+        "./src/**/*"
     ]
 }

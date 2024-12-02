@@ -1,5 +1,4 @@
-export { default as AIModelAPI } from './AIModelAPI'
-export { MODELS, MODEL_CATEGORY } from './models'
+export { Models, ModelCategory } from './models'
 export type {
     RequestForm,
     RequestOption,
@@ -8,3 +7,6 @@ export {
     ChatRole,
     ChatType
 } from './types/request-form'
+
+import { default as AIModelAPI } from './AIModelAPI'
+export default AIModelAPI;

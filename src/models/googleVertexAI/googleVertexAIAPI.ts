@@ -21,7 +21,7 @@ class GoogleVertexAIAPI extends ChatAIAPI {
     private lasttoken:string | null = null;
 
     override async request(form:RequestForm, option:RequestOption):Promise<ChatAPIResponse> {
-        const requestAPI = option.requestAPI;
+        const fetch = option.fetch;
         let token = this.lasttoken;
 
         const [url, data] = this.makeRequestData(form);
@@ -40,7 +40,7 @@ class GoogleVertexAIAPI extends ChatAIAPI {
                 await refreshToken();
             }
             
-            const res = await requestAPI(url, data);
+            const res = await fetch(url, data);
             if (res.ok) {
                 return res.data;
             }
@@ -48,7 +48,7 @@ class GoogleVertexAIAPI extends ChatAIAPI {
                 // 토큰 만료시 재시도
                 await refreshToken();
                 
-                const res =  await requestAPI(url, data);
+                const res =  await fetch(url, data);
                 if (res.ok) {
                     return res.data;
                 }

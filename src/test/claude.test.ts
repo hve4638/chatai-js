@@ -1,4 +1,4 @@
-import { RequestForm, MODELS, ChatRole } from '../'
+import { RequestForm, Models, ChatRole } from '../'
 import { user, bot, system } from './message'
 import { ClaudeAPI } from '../models';
 
@@ -6,7 +6,7 @@ const claudeAPI = new ClaudeAPI();
 
 describe('transform RequestForm', () => {
     const testForm:RequestForm = {
-        model: MODELS.CLAUDE,
+        model: Models.CLAUDE,
         model_detail: 'model-name',
         secret : {
             api_key : 'api-key',

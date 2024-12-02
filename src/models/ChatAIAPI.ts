@@ -15,14 +15,14 @@ abstract class ChatAIAPI implements IChatAIAPI {
         option:RequestOption,
         debug:RequestDebugOption={}
     ):Promise<ChatAPIResponse> {
-        const requestAPI = option.requestAPI;
+        const fetch = option.fetch;
         const [url, data] = this.makeRequestData(form);
         if (debug.requestData) {
             debug.requestData.url = url;
             debug.requestData.data = data;
         }
         
-        const promise = requestAPI(url, data);
+        const promise = fetch(url, data);
         let res:Response;
         try {
             res = await promise;

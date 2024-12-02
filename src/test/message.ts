@@ -1,4 +1,4 @@
-import { RequestForm, MODELS, ChatRole } from '../';
+import { RequestForm, Models, ChatRole } from '../';
 import { Message } from '../types/request-form';
 
 export function bot(textMessage:string):Message {

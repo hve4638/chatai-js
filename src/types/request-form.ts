@@ -45,7 +45,7 @@ export type Content = {
 export type RequestAPI = (url:string, init:RequestInit)=>Promise<any>;
 
 export type RequestOption = {
-    requestAPI:RequestAPI;
+    fetch:RequestAPI;
 };
 
 export type RequestDebugOption = {

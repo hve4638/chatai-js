@@ -3,7 +3,7 @@ import type { RequestForm, RequestDebugOption } from './types/request-form';
 
 import {
     ClaudeAPI, OpenAIGPTAPI, GoogleGeminiAPI, GoogleVertexAIAPI,
-    MODELS
+    Models
 } from './models';
 import type { ChatAPIResponse } from './types/response-data';
 
@@ -21,10 +21,10 @@ class AIModelAPI {
     }
 
     refreshCache() {
-        this.chatAPIs[MODELS.CLAUDE] = new ClaudeAPI();
-        this.chatAPIs[MODELS.OPENAI_GPT] = new OpenAIGPTAPI();
-        this.chatAPIs[MODELS.GOOGLE_GEMINI] = new GoogleGeminiAPI();
-        this.chatAPIs[MODELS.GOOGLE_VERTEXAI] = new GoogleVertexAIAPI();
+        this.chatAPIs[Models.CLAUDE] = new ClaudeAPI();
+        this.chatAPIs[Models.OPENAI_GPT] = new OpenAIGPTAPI();
+        this.chatAPIs[Models.GOOGLE_GEMINI] = new GoogleGeminiAPI();
+        this.chatAPIs[Models.GOOGLE_VERTEXAI] = new GoogleVertexAIAPI();
     }
 
     async request(form:RequestForm, debug?:RequestDebugOption):Promise<ChatAPIResponse> {
