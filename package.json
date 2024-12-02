@@ -11,6 +11,9 @@
   "repository": "https://github.com/hve4638/chatai-ts.git",
   "author": "Hve <hve4638@gmail.com>",
   "license": "MIT",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
   "scripts": {
     "start" : "node .",
     "build" : "tsc --build"
