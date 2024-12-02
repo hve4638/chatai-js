@@ -1,0 +1,25 @@
+{
+  "name": "@hve4638/chatai",
+  "version": "0.0.1",
+  "source": "src/index.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.module.js",
+  "files": [
+    "dist"
+  ],
+  "types": "dist/index.d.ts",
+  "repository": "https://github.com/hve4638/chatai-ts.git",
+  "author": "Hve <hve4638@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "start" : "node .",
+    "build" : "tsc --build"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  }
+}
