@@ -41,16 +41,24 @@ class GoogleGeminiAPI extends ChatAIAPI {
                 parts: parts
             });
         }
+        const generationConfig = {
+            maxOutputTokens: form.max_tokens ?? 1024,
+            temperature: form.temperature ?? 1.0,
+            topP: form.top_p ?? 1.0,
+        };
+        if (form.additional?.response_mime_type) {
+            generationConfig['response_mime_type'] = form.additional.response_mime_type;
+        }
+        if (form.additional?.response_schema) {
+            generationConfig['response_schema'] = form.additional.response_schema;
+        }
         
         const body = {
             contents: contents,
-            'generation_config' : {
-                'maxOutputTokens': form.max_tokens ?? 1024,
-                'temperature': form.temperature ?? 1.0,
-                'topP': form.top_p ?? 1.0,
-            },
-            'safetySettings' : GENIMI_OPTION_SAFETY
+            generationConfig : generationConfig,
+            safetySettings : GENIMI_OPTION_SAFETY
         };
+        
         const data = {
             method : 'POST',
             headers: {
