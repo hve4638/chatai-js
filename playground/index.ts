@@ -6,8 +6,6 @@ import AIModelAPI, {
     JsonSchema,
 } from '../src'
 
-// https://ai.google.dev/api/generate-content?hl=ko#v1beta.GenerationConfig
-
 async function run()  {
     const api = new AIModelAPI({ fetch });
     const data = await api.request({
@@ -17,33 +15,31 @@ async function run()  {
                 content: [
                     {
                         chatType: ChatType.TEXT,
-                        text: "다음을 json으로 출력해 : Hello, World!"
+                        text: "Describe yourself very briefly."
                     }
                 ]
             },
         ],
         model: ModelNames.OPENAI_GPT,
-        model_detail: Models.OPENAI_GPT['gpt-4o-mini'],
+        model_detail: Models.OPENAI_GPT['gpt-4o'],
         secret: {
             api_key : process.env['API_KEY']
         },
-        response_format : JsonSchema.JSON(),
-        additional : {
-            response_mime_type : 'application/json',
-            response_schema : {
-                type : 'ARRAY',
-                items : {
-                    type : 'OBJECT',
-                    properties : {
-                        'response' : { 'type' : 'STRING' },
-                        'emotion' : { 'type' : 'STRING' },
-                        'intent' : { 'type' : 'STRING' }
-                    }
-                }
-            }
-        }
+        response_format : new JsonSchema({
+            name : 'response_message',
+            schema : JsonSchema.Object({
+                'output' : JsonSchema.String(),
+                'user_intent' : JsonSchema.String(),
+                'user_emotion' : JsonSchema.String(),
+            }, {
+                required : ['output', 'user_intent', 'user_emotion'],
+                allow_additional_properties : false
+            }),
+        }),
+        max_tokens: 100,
     });
-    console.log(data)
+    console.log(data.response.raw);
+    console.log(data.response);
 }
 
 run();
