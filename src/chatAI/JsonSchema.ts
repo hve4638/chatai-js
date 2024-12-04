@@ -1,13 +1,64 @@
-import { Schema, BaseSchema } from './types'
+import { Schema, BaseSchema, IJsonSchema, JsonSchemaHandler, JsonObjectSchemaOptions } from './types'
 
-class JsonSchema {
-    static JSON():BaseSchema {
-        return {type: 'json'};
+type JsonSchemaArgs = {
+    name?:string;
+    schema?:BaseSchema;
+}
+
+class JsonSchema implements IJsonSchema {
+    private _name:string;
+    private schema?:BaseSchema;
+
+    constructor({
+        name,
+        schema
+    }:JsonSchemaArgs) {
+        this._name = name ?? '';
+        this.schema = schema;
     }
-    static Object(properties:{[key:string]:Schema}):Schema {
-        return { type: 'object', properties };
+    
+    get name() {
+        return this._name;
     }
-    static Array(items:Schema) {
+
+    hasSchema() {
+        return this.schema !== undefined;
+    }
+
+    parse(handler:JsonSchemaHandler) {
+        if(!this.hasSchema()) {
+            return undefined;
+        }
+        else {
+            return this.parseSchema(this.schema!, handler);
+        }
+    }
+
+    private parseSchema(schema:BaseSchema, handler:JsonSchemaHandler) {
+        switch(schema.type) {
+            case 'array':
+            {
+                const items = this.parseSchema(schema.items, handler);
+                return handler.array(items);
+            }   
+            case 'object':
+            {
+                const properties = {}
+                for (const key in schema.properties) {
+                    properties[key] = this.parseSchema(schema.properties[key], handler);
+                }
+                return handler.object(properties, schema.options);
+            }
+            case 'boolean': return handler.boolean();
+            case 'number': return handler.number();
+            case 'string': return handler.string();
+        }
+    }
+
+    static Object(properties:{[key:string]:Schema}, options:JsonObjectSchemaOptions):Schema {
+        return { type: 'object', properties, options };
+    }
+    static Array(items:Schema):Schema {
         return { type: 'array', items };
     }
     static Boolean():Schema {
@@ -39,34 +90,6 @@ class JsonSchema {
         return schema.type === 'object';
     }
 
-    static parse(schema:BaseSchema, handler:{
-        'json': ()=>object,
-        'array' : (element:object)=>object,
-        'object' : (properties:object)=>object,
-        'boolean' : ()=>object,
-        'number' : ()=>object,
-        'string' : ()=>object,
-    }) {
-        switch(schema.type) {
-            case 'array':
-            {
-                const items = this.parse(schema.items, handler);
-                return handler.array(items);
-            }   
-            case 'object':
-            {
-                const properties = {}
-                for (const key in schema.properties) {
-                    properties[key] = this.parse(schema.properties[key], handler);
-                }
-                return handler.object(properties);
-            }   
-            case 'json': return handler.json();
-            case 'boolean': return handler.boolean();
-            case 'number': return handler.number();
-            case 'string': return handler.string();
-        }
-    }
 }
 
 

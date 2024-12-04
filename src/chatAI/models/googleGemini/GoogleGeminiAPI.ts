@@ -46,6 +46,26 @@ class GoogleGeminiAPI extends ChatAIAPI {
             temperature: form.temperature ?? 1.0,
             topP: form.top_p ?? 1.0,
         };
+        if (form.response_format) {
+            if (!form.response_format.hasSchema()) {
+                generationConfig['response_mime_type'] = 'application/json';
+            }
+            else {
+                generationConfig['response_mime_type'] = 'application/json';
+                generationConfig['response_schema'] = form.response_format.parse({
+                    'array' : (element)=> ({'type':'ARRAY', 'items':element}),
+                    'object' : (properties, options) => {
+                        return {
+                            'type': 'OBJECT',
+                            'properties': properties,
+                        }
+                    },
+                    'boolean' : ()=>({'type' : 'BOOLEAN'}),
+                    'number' : ()=>({'type' : 'NUMBER'}),
+                    'string' : ()=>({'type' : 'STRING'}),
+                });
+            }
+        }
         if (form.additional?.response_mime_type) {
             generationConfig['response_mime_type'] = form.additional.response_mime_type;
         }

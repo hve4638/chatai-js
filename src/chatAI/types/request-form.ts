@@ -1,4 +1,4 @@
-import type { Schema, BaseSchema } from './response-schema'
+import type { Schema, BaseSchema, IJsonSchema } from './response-schema'
 
 export const ChatRole = {
     'USER' : 'USER',
@@ -29,8 +29,10 @@ export type RequestForm = {
         api_key? : string;
         [key:string] : any;
     },
+    
     /** 응답 포맷을 강제하기 위해 사용 */
-    response_format? : BaseSchema;
+    response_format? : IJsonSchema;
+
     /** 모델별로 적용되는 추가 기능 */
     additional? : any;
 }

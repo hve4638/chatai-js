@@ -35,25 +35,36 @@ class OpenAIGPTAPI extends ChatAIAPI {
             top_p : form.top_p ?? 1.0,
         }
         if (form.response_format) {
-            if (JsonSchema.isJson(form.response_format)) {
+            if (form.response_format.hasSchema()) {
+                body['response_format'] = {
+                    'type' : 'json_schema',
+                    'json_schema' : {
+                        'name' : form.response_format.name,
+                        'strict' : true,
+                        'schema' : form.response_format.parse({
+                            'array' : (element)=> ({'type':'array', 'items':element}),
+                            'object' : (properties, options) => {
+                                return {
+                                    'type': 'object',
+                                    'properties': properties,
+                                    'required': options.required ?? [],
+                                    'additionalProperties': options.allow_additional_properties ?? false
+                                }
+                            },
+                            'boolean' : ()=>({'type' : 'boolean'}),
+                            'number' : ()=>({'type' : 'number'}),
+                            'string' : ()=>({'type' : 'string'}),
+                        }),
+                    }
+                }
+            }
+            else {
                 body['response_format'] = {
                     'type' : 'json_object'
                 }
             }
-            else {
-                body['response_format'] = JsonSchema.parse(
-                    form.response_format,
-                    {
-                        'json': ()=>({'type' : 'json_object' }),
-                        'array' : (element)=> ({'type':'array', 'items':element}),
-                        'object' : (properties)=> ({'type': 'object', 'properties': properties}),
-                        'boolean' : ()=>({'type' : 'boolean'}),
-                        'number' : ()=>({'type' : 'number'}),
-                        'string' : ()=>({'type' : 'string'}),
-                    }
-                )
-            }
         }
+        
         const data = {
             method : 'POST',
             headers: {
