@@ -1,16 +1,20 @@
-export interface ChatAPIResponse {
-    input? : {
-        promptText : string;   // Prompt 템플릿
-        note : {[key:string]:string}; // Prompt 템플릿에 사용되는 노트
-        content : string[];
-    };
-    output : {
-        content : string[];   // AI 응답 텍스트
-    };
-    tokens : number;        // 응답 토큰 수
-    finishReason : string;  // 응답 종료 원인
+import { RequestForm } from './request-form';
 
-    error : string|null;    // 정상 응답이 아닐시 에러텍스트
-    warning : string|null;  // 경고 (토큰 한도, safety 등)
-    normalResponse : boolean; // 정답 응답 여부
+export interface ChatAPIResponse {
+    request : {
+        form : RequestForm;
+        url : string;
+        data : RequestInit;
+    };
+    response : {
+        ok : boolean;               // 정상 응답 여부
+        http_status : number;       // HTTP 상태 코드
+        raw : object;               // 응답 원본
+        
+        content : string[];         // 응답 텍스트
+        warning : string|null;      // 한줄 경고 (토큰 한도, safety 등)
+        
+        tokens : number;            // 응답 토큰 수
+        finish_reason : string;     // 응답 종료 원인
+    };
 }

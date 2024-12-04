@@ -76,7 +76,7 @@ class OpenAIGPTAPI extends ChatAIAPI {
         return [url, data];
     }
 
-    responseThen(rawResponse: any, requestForm:RequestForm): ChatAPIResponse {
+    responseThen(rawResponse: any, requestForm:RequestForm): Pick<ChatAPIResponse, 'response'> {
         let tokens: number;
         let warning: string | null;
         try {
@@ -92,17 +92,19 @@ class OpenAIGPTAPI extends ChatAIAPI {
         if (reason === 'stop') warning = null;
         else if (reason === 'length') warning = 'max token limit';
         else warning = `unhandle reason : ${reason}`;
-      
+        
         return {
-            output : {
-                content: [text]
+            response : {
+                ok : true,
+                http_status : -1,
+                raw : rawResponse,
+
+                content: [text],
+                warning : warning,
+
+                tokens : tokens,
+                finish_reason : reason,
             },
-            tokens : tokens,
-            finishReason : reason,
-            
-            error : null,
-            warning : warning,
-            normalResponse : true,
         }
     }
 }

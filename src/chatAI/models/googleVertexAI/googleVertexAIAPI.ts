@@ -41,24 +41,19 @@ class GoogleVertexAIAPI extends ChatAIAPI {
             }
             
             const res = await fetch(url, data);
-            if (res.ok) {
-                return res.data;
-            }
-            else if (res.status === 401) {
+            if (res.status === 401) {
                 // 토큰 만료시 재시도
                 await refreshToken();
                 
                 const res =  await fetch(url, data);
-                if (res.ok) {
-                    return res.data;
-                }
-                else {
-                    throw new Error(`${res.reason} (${res.status})`);
-                }
+                return this.handleFetch({ res, form, url, data });
             }
             else {
-                throw new Error(`${res.reason} (${res.status})`);
+                return this.handleFetch({ res, form, url, data });
             }
+        }
+        catch (error:unknown) {
+            return this.handleFetchError({ error, form, url, data });
         }
         finally {
             this.lasttoken = token;
@@ -129,7 +124,7 @@ class GoogleVertexAIAPI extends ChatAIAPI {
         data['header']['Authorization'] = `Bearer ${this.lasttoken}`;
     }
 
-    responseThen(rawResponse: any, requestForm:RequestForm): ChatAPIResponse {
+    responseThen(rawResponse: any, requestForm:RequestForm): Pick<ChatAPIResponse, 'response'> {
         return GoogleVertexAIAPI.claude.responseThen(rawResponse, requestForm);
     }
 

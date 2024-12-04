@@ -14,5 +14,5 @@ export interface IChatAIAPI {
     postprocess();
     request(requsetdata:RequestForm, option: RequestOption):Promise<ChatAPIResponse>;
     makeRequestData(form: RequestForm): [string, RequestInit];
-    responseThen(response: any, requestFrom:RequestForm): ChatAPIResponse;
+    responseThen(response: any, requestFrom:RequestForm): Pick<ChatAPIResponse, 'response'>;
 }

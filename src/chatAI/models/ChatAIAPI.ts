@@ -22,32 +22,112 @@ abstract class ChatAIAPI implements IChatAIAPI {
             debug.requestData.data = data;
         }
         
-        const promise = fetch(url, data);
-        let res:Response;
         try {
-            res = await promise;
+            const res = await fetch(url, data);
+
+            return await this.handleFetch({ res, form, url, data });
         }
-        catch (e) {
-            console.log(e)
-            throw new Error('Fetch Fail')
+        catch (error:unknown) {
+            return await this.handleFetchError({ error, form, url, data });
         }
-        
+    }
+
+    protected async handleFetch(
+        { 
+            res,
+            form,
+            url, data
+        }:{
+            res:Response,
+            form:RequestForm,
+            url:string,
+            data:RequestInit
+        }
+    ):Promise<ChatAPIResponse> {
         if (res.ok) {
-            return this.responseThen(await res.json(), form);
+            const result = this.responseThen(await res.json(), form);
+            
+            if (result.response) {
+                result.response.ok = true;
+                result.response.http_status = res.status;
+            }
+            return {
+                ...result,
+                request : {
+                    form : form,
+                    url : url,
+                    data : data,
+                }
+            } as ChatAPIResponse;
         }
         else {
-            let error:Error;
-            try {
-                error = new HTTPError(res, await res.text());
+            return {
+                request : {
+                    form : form,
+                    url : url,
+                    data : data,
+                },
+                response : {
+                    ok : false,
+                    http_status : res.status,
+                    raw : await res.json(),
+                    content: [],
+                    warning : null,
+                    tokens : 0,
+                    finish_reason : '',
+                }
             }
-            catch (e) {
-                error = new HTTPError(res);
+        }
+    }
+    protected async handleFetchError(
+        { 
+            error,
+            form,
+            url, data
+        }:{
+            error:unknown,
+            form:RequestForm,
+            url:string,
+            data:RequestInit
+        }
+    ):Promise<ChatAPIResponse> {
+        let errorData:any;
+        if (error instanceof Error) {
+            errorData = {
+                name : error.name,
+                reason: error.message,
+                stack : error.stack
             }
-            throw error;
+        }
+        else if (typeof error === 'object') {
+            errorData = error;
+        }
+        else {
+            errorData = {
+                name : 'UnknownError',
+                reason : `${error}`
+            }
+        }
+
+        return {
+            request : {
+                form : form,
+                url : url,
+                data : data,
+            },
+            response : {
+                ok : false,
+                http_status : 0,
+                raw : errorData,
+                content: [],
+                warning : null,
+                tokens : 0,
+                finish_reason : '',
+            }
         }
     }
     abstract makeRequestData(form: RequestForm): [string, RequestInit];
-    abstract responseThen(response: any, requestFrom:RequestForm): ChatAPIResponse;
+    abstract responseThen(rawResponse: any, requestFrom:RequestForm): Pick<ChatAPIResponse, 'response'>;
 }
 
 export default ChatAIAPI;

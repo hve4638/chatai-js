@@ -89,7 +89,7 @@ class GoogleGeminiAPI extends ChatAIAPI {
 
         return [url, data];
     }
-    responseThen(rawResponse: any, requestFrom: RequestForm): ChatAPIResponse {
+    responseThen(rawResponse: any, requestFrom: RequestForm): Pick<ChatAPIResponse, 'response'> {
         let tokens: number;
         let warning: string | null;
         try {
@@ -99,24 +99,26 @@ class GoogleGeminiAPI extends ChatAIAPI {
             tokens = 0;
         }
       
-        const reason = rawResponse.candidates[0]?.finishReason;
+        const reason = rawResponse.candidates[0]?.finish_reason;
         const text:string = rawResponse.candidates[0]?.content?.parts[0].text ?? '';
         
         if (reason == 'STOP') warning = null;
         else if (reason == 'SAFETY') warning = 'blocked by SAFETY';
         else if (reason == 'MAX_TOKENS') warning = 'max token limit';
         else warning = `unhandle reason : ${reason}`;
-      
+        
         return {
-            output : {
-                content : [text]
-            },
-            tokens : tokens,
-            finishReason : reason,
+            response : {
+                ok : true,
+                http_status : -1,
+                raw : rawResponse,
 
-            error : null,
-            warning : warning,
-            normalResponse : true,
+                content: [text],
+                warning : warning,
+
+                tokens : tokens,
+                finish_reason : reason,
+            },
         }
     }
 }

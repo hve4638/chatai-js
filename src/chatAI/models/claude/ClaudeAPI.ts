@@ -80,7 +80,7 @@ class ClaudeAPI extends ChatAIAPI {
         
         return [url, data];
     }
-    responseThen(rawResponse: any, requestForm:RequestForm): ChatAPIResponse {
+    responseThen(rawResponse: any, requestForm:RequestForm): Pick<ChatAPIResponse, 'response'> {
         let tokens: number;
         let warning: string | null;
         try {
@@ -89,7 +89,7 @@ class ClaudeAPI extends ChatAIAPI {
         catch (e) {
             tokens = 0;
         }
-      
+        
         const reason = rawResponse.stop_reason;
         const text = rawResponse.content[0]?.text ?? '';
 
@@ -98,15 +98,17 @@ class ClaudeAPI extends ChatAIAPI {
         else warning = `unhandle reason : ${reason}`;
       
         return {
-            output : {
-                content : [text]
-            },
-            tokens : tokens,
-            finishReason : reason,
+            response : {
+                ok : true,
+                http_status : -1,
+                raw : rawResponse,
 
-            error : null,
-            warning : warning,
-            normalResponse : true,
+                content: [text],
+                warning : warning,
+
+                tokens : tokens,
+                finish_reason : reason,
+            }
         }
     }
 }
