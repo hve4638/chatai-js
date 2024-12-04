@@ -1,3 +1,5 @@
+export type { Schema, BaseSchema } from './response-schema'
+
 import { RequestForm, RequestOption } from './request-form'
 import { ChatAPIResponse } from './response-data'
 

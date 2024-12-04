@@ -1,4 +1,10 @@
-import AIModelAPI, { ChatRole, Models, ChatType } from '../src'
+import AIModelAPI, {
+    ChatRole,
+    Models,
+    ModelNames,
+    ChatType,
+    JsonSchema,
+} from '../src'
 
 // https://ai.google.dev/api/generate-content?hl=ko#v1beta.GenerationConfig
 
@@ -7,29 +13,21 @@ async function run()  {
     const data = await api.request({
         message: [
             {
-                role: ChatRole.SYSTEM,
-                content: [
-                    {
-                        chatType: ChatType.TEXT,
-                        text: "Understand the user's intent and emotions and respond accordingly."
-                    }
-                ]
-            },
-            {
                 role: ChatRole.USER,
                 content: [
                     {
                         chatType: ChatType.TEXT,
-                        text: "Introduce yourself"
+                        text: "다음을 json으로 출력해 : Hello, World!"
                     }
                 ]
-            }
+            },
         ],
-        model: Models.GOOGLE_GEMINI,
-        model_detail: 'gemini-1.5-flash-002',
+        model: ModelNames.OPENAI_GPT,
+        model_detail: Models.OPENAI_GPT['gpt-4o-mini'],
         secret: {
             api_key : process.env['API_KEY']
         },
+        response_format : JsonSchema.JSON(),
         additional : {
             response_mime_type : 'application/json',
             response_schema : {

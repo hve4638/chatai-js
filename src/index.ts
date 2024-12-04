@@ -1,11 +1,14 @@
 export {
-    Models, ModelCategory,
+    Models, ModelNames,
     ChatRole,
     ChatType,
 } from './chatAI'
 export type {
     RequestForm,
     RequestOption,
+} from './chatAI'
+export {
+    JsonSchema
 } from './chatAI'
 
 import AIModelAPI from './chatAI';

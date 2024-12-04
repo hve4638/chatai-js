@@ -1,3 +1,5 @@
+import type { Schema, BaseSchema } from './response-schema'
+
 export const ChatRole = {
     'USER' : 'USER',
     'BOT' : 'BOT',
@@ -26,8 +28,10 @@ export type RequestForm = {
     secret : {
         api_key? : string;
         [key:string] : any;
-    }
-
+    },
+    /** 응답 포맷을 강제하기 위해 사용 */
+    response_format? : BaseSchema;
+    /** 모델별로 적용되는 추가 기능 */
     additional? : any;
 }
 

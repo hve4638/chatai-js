@@ -1,6 +1,7 @@
 import type { ChatRole, ChatType } from '../../types/request-form'
 import type { RequestForm } from '../../types/request-form'
 import { ChatAPIResponse } from '../../types/response-data';
+import JsonSchema from '../../JsonSchema';
 
 import { OPENAI_GPT_URL, ROLE, ROLE_DEFAULT } from './data'
 
@@ -32,6 +33,26 @@ class OpenAIGPTAPI extends ChatAIAPI {
             max_tokens: form.max_tokens ?? 1024,
             temperature: form.temperature ?? 1.0,
             top_p : form.top_p ?? 1.0,
+        }
+        if (form.response_format) {
+            if (JsonSchema.isJson(form.response_format)) {
+                body['response_format'] = {
+                    'type' : 'json_object'
+                }
+            }
+            else {
+                body['response_format'] = JsonSchema.parse(
+                    form.response_format,
+                    {
+                        'json': ()=>({'type' : 'json_object' }),
+                        'array' : (element)=> ({'type':'array', 'items':element}),
+                        'object' : (properties)=> ({'type': 'object', 'properties': properties}),
+                        'boolean' : ()=>({'type' : 'boolean'}),
+                        'number' : ()=>({'type' : 'number'}),
+                        'string' : ()=>({'type' : 'string'}),
+                    }
+                )
+            }
         }
         const data = {
             method : 'POST',

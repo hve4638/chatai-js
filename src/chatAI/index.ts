@@ -1,4 +1,4 @@
-export { Models, ModelCategory } from './models'
+export { ModelNames, Models } from './data'
 export type {
     RequestForm,
     RequestOption,
@@ -7,6 +7,7 @@ export {
     ChatRole,
     ChatType
 } from './types/request-form'
+export { default as JsonSchema } from './JsonSchema'
 
 import { default as AIModelAPI } from './AIModelAPI'
 export default AIModelAPI;
