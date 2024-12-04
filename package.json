@@ -12,12 +12,12 @@
   "author": "Hve <hve4638@gmail.com>",
   "license": "MIT",
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com/"
+    "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
     "start" : "ts-node ./playground/index.ts",
     "build" : "tsc --build",
-    "pub" : "publish --access=public"
+    "pub" : "npm publish --access=public"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
