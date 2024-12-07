@@ -7,7 +7,7 @@ export {
     ChatRole,
     ChatType
 } from './types/request-form'
-export { default as JsonSchema } from './JsonSchema'
+export { default as JSONSchema } from './JSONSchema'
 
 import { default as AIModelAPI } from './AIModelAPI'
 export default AIModelAPI;

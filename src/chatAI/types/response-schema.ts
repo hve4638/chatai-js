@@ -6,27 +6,27 @@ export type Schema = {
 } | {
     type: 'object',
     properties: {[key:string]:Schema}
-    options : JsonObjectSchemaOptions
+    options : JSONObjectSchemaOptions
 };
 
 export type BaseSchema = {
     type: 'json'
 } | Schema;
 
-export type JsonObjectSchemaOptions = {
+export type JSONObjectSchemaOptions = {
     required?: string[],
     allow_additional_properties?: boolean
 }
 
-export interface IJsonSchema {
+export interface IJSONSchema {
     get name():string;
     hasSchema():boolean;
-    parse(handler:JsonSchemaHandler):object;
+    parse(handler:JSONSchemaHandler):object;
 }
 
-export interface JsonSchemaHandler {
+export interface JSONSchemaHandler {
     'array' : (element:object)=>object,
-    'object' : (properties:{[key:string]:Schema}, options:JsonObjectSchemaOptions)=>object,
+    'object' : (properties:{[key:string]:Schema}, options:JSONObjectSchemaOptions)=>object,
     'boolean' : ()=>object,
     'number' : ()=>object,
     'string' : ()=>object,

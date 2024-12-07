@@ -8,7 +8,7 @@ export type {
     RequestOption,
 } from './chatAI'
 export {
-    JsonSchema
+    JSONSchema
 } from './chatAI'
 
 import AIModelAPI from './chatAI';

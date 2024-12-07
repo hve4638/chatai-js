@@ -1,9 +1,9 @@
 export type {
     Schema,
     BaseSchema,
-    JsonObjectSchemaOptions,
-    IJsonSchema,
-    JsonSchemaHandler
+    JSONObjectSchemaOptions,
+    IJSONSchema,
+    JSONSchemaHandler
 } from './response-schema'
 
 import { RequestForm, RequestOption } from './request-form'

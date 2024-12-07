@@ -1,18 +1,18 @@
-import { Schema, BaseSchema, IJsonSchema, JsonSchemaHandler, JsonObjectSchemaOptions } from './types'
+import { Schema, BaseSchema, IJSONSchema, JSONSchemaHandler, JSONObjectSchemaOptions } from './types'
 
-type JsonSchemaArgs = {
+type JSONSchemaArgs = {
     name?:string;
     schema?:BaseSchema;
 }
 
-class JsonSchema implements IJsonSchema {
+class JSONSchema implements IJSONSchema {
     private _name:string;
     private schema?:BaseSchema;
 
     constructor({
         name,
         schema
-    }:JsonSchemaArgs) {
+    }:JSONSchemaArgs) {
         this._name = name ?? '';
         this.schema = schema;
     }
@@ -25,7 +25,7 @@ class JsonSchema implements IJsonSchema {
         return this.schema !== undefined;
     }
 
-    parse(handler:JsonSchemaHandler) {
+    parse(handler:JSONSchemaHandler) {
         if(!this.hasSchema()) {
             return undefined;
         }
@@ -34,7 +34,7 @@ class JsonSchema implements IJsonSchema {
         }
     }
 
-    private parseSchema(schema:BaseSchema, handler:JsonSchemaHandler) {
+    private parseSchema(schema:BaseSchema, handler:JSONSchemaHandler) {
         switch(schema.type) {
             case 'array':
             {
@@ -55,7 +55,7 @@ class JsonSchema implements IJsonSchema {
         }
     }
 
-    static Object(properties:{[key:string]:Schema}, options:JsonObjectSchemaOptions):Schema {
+    static Object(properties:{[key:string]:Schema}, options:JSONObjectSchemaOptions):Schema {
         return { type: 'object', properties, options };
     }
     static Array(items:Schema):Schema {
@@ -71,7 +71,7 @@ class JsonSchema implements IJsonSchema {
         return { type: 'string' };
     }
 
-    static isJson(schema:BaseSchema) {
+    static isJSON(schema:BaseSchema) {
         return schema.type === 'json';
     }
     static isString(schema:Schema) {
@@ -93,4 +93,4 @@ class JsonSchema implements IJsonSchema {
 }
 
 
-export default JsonSchema;
+export default JSONSchema;

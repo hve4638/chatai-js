@@ -1,7 +1,7 @@
 import type { ChatRole, ChatType } from '../../types/request-form'
 import type { RequestForm } from '../../types/request-form'
 import { ChatAPIResponse } from '../../types/response-data';
-import JsonSchema from '../../JsonSchema';
+import JSONSchema from '../../JSONSchema';
 
 import { OPENAI_GPT_URL, ROLE, ROLE_DEFAULT } from './data'
 

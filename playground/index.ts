@@ -3,7 +3,7 @@ import AIModelAPI, {
     Models,
     ModelNames,
     ChatType,
-    JsonSchema,
+    JSONSchema,
 } from '../src'
 
 async function run()  {
@@ -25,12 +25,12 @@ async function run()  {
         secret: {
             api_key : process.env['API_KEY']
         },
-        response_format : new JsonSchema({
+        response_format : new JSONSchema({
             name : 'response_message',
-            schema : JsonSchema.Object({
-                'output' : JsonSchema.String(),
-                'user_intent' : JsonSchema.String(),
-                'user_emotion' : JsonSchema.String(),
+            schema : JSONSchema.Object({
+                'output' : JSONSchema.String(),
+                'user_intent' : JSONSchema.String(),
+                'user_emotion' : JSONSchema.String(),
             }, {
                 required : ['output', 'user_intent', 'user_emotion'],
                 allow_additional_properties : false
