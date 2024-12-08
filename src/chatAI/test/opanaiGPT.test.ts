@@ -20,7 +20,7 @@ describe('transform RequestForm', () => {
             bot('bot-message')
         ]
     };
-    const [testFormUrl, testFormData] = openAIGPTAPI.makeRequestData(testForm);
+    const [testFormUrl, testFormData, testFormConfig] = openAIGPTAPI.makeRequestData(testForm);
 
     test('valid url', async () => {
         const expected = 'https://api.openai.com/v1/chat/completions';
@@ -47,7 +47,7 @@ describe('transform RequestForm', () => {
             temperature : 1.0,
             top_p : 1.0,
         }
-        const actual = JSON.parse(testFormData.body);
+        const actual = testFormData;
         expect(actual).toEqual(expected);
     });
     test('valid header', async () => {
@@ -55,7 +55,7 @@ describe('transform RequestForm', () => {
             'Content-Type': 'application/json',
             'Authorization': `Bearer api-key`
         }
-        const actual = testFormData.headers;
+        const actual = (testFormConfig as any).headers.headers;
         expect(actual).toEqual(expected);
     });
 });

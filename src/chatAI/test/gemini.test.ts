@@ -20,7 +20,7 @@ describe('transform RequestForm', () => {
             bot('bot-message')
         ]
     };
-    const [testFormUrl, testFormData] = geminiAPI.makeRequestData(testForm);
+    const [testFormUrl, testFormData, testFormConfig] = geminiAPI.makeRequestData(testForm);
 
     test('valid url', async () => {
         // URL에 API키와 모델명이 포함됨
@@ -63,14 +63,14 @@ describe('transform RequestForm', () => {
             },
             safetySettings : expect.any(Object)
         }
-        const actual = JSON.parse(testFormData.body);
+        const actual = testFormData;
         expect(actual).toEqual(expected);
     });
     test('valid header', async () => {
         const expected = {
             'Content-Type': 'application/json'
         }
-        const actual = testFormData.headers;
+        const actual = (testFormConfig as any).headers.headers;
         expect(actual).toEqual(expected);
     });
 });

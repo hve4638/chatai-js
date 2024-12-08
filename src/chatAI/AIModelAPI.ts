@@ -7,18 +7,12 @@ import {
 import {
     ClaudeAPI, OpenAIGPTAPI, GoogleGeminiAPI, GoogleVertexAIAPI
 } from './models';
-import type { ChatAPIResponse } from './types/response-data';
-
-import { RequestOption } from './types/request-form';
-
+import type { ChatAIResponse } from './types/response-data';
 
 class AIModelAPI {
-    private requestOption:RequestOption;
     private chatAPIs:{[key:string]:ChatAIAPI} = {};
 
-    constructor(requestOption:RequestOption) {
-        this.requestOption = requestOption;
-        
+    constructor() {
         this.refreshCache();
     }
 
@@ -29,14 +23,17 @@ class AIModelAPI {
         this.chatAPIs[ModelNames.GOOGLE_VERTEXAI] = new GoogleVertexAIAPI();
     }
 
-    async request(form:RequestForm, debug?:RequestDebugOption):Promise<ChatAPIResponse> {
+    async request(form:RequestForm, debug?:RequestDebugOption):Promise<ChatAIResponse> {
+        const modelAPI = this.chatAPIs[form.model];
+        const response = await modelAPI.request(form, debug);
+        return response;
+    }
+
+    async stream(form:RequestForm):Promise<[AsyncGenerator<string, void, undefined>, Promise<ChatAIResponse>]> {
         const modelAPI = this.chatAPIs[form.model];
 
-        await modelAPI.preprocess();
-        const response = await modelAPI.request(form, this.requestOption, debug);
-        await modelAPI.postprocess();
-
-        return response;
+        const [messages, response] = await modelAPI.stream(form);
+        return [messages, response];
     }
 }
 

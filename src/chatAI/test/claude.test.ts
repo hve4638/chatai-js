@@ -20,7 +20,7 @@ describe('transform RequestForm', () => {
             bot('bot-message')
         ]
     };
-    const [testFormUrl, testFormData] = claudeAPI.makeRequestData(testForm);
+    const [testFormUrl, testFormData, testFormConfig] = claudeAPI.makeRequestData(testForm);
 
     test('valid url', async () => {
         const expected = 'https://api.anthropic.com/v1/messages';
@@ -54,7 +54,7 @@ describe('transform RequestForm', () => {
             temperature : 1.0,
             top_p : 1.0,
         }
-        const actual = JSON.parse(testFormData.body);
+        const actual = testFormData;
         expect(actual).toEqual(expected);
     });
     test('valid header', async () => {
@@ -63,7 +63,7 @@ describe('transform RequestForm', () => {
             'x-api-key': 'api-key',
             'anthropic-version': '2023-06-01'
         }
-        const actual = testFormData.headers;
+        const actual = (testFormConfig as any).headers;
         expect(actual).toEqual(expected);
     });
 });

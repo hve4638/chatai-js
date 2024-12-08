@@ -6,13 +6,16 @@ export type {
     JSONSchemaHandler
 } from './response-schema'
 
-import { RequestForm, RequestOption } from './request-form'
-import { ChatAPIResponse } from './response-data'
+import { RequestDebugOption, RequestForm, RequestOption } from './request-form'
+import { ChatAIResponse } from './response-data'
 
 export interface IChatAIAPI {
-    preprocess();
-    postprocess();
-    request(requsetdata:RequestForm, option: RequestOption):Promise<ChatAPIResponse>;
-    makeRequestData(form: RequestForm): [string, RequestInit];
-    responseThen(response: any, requestFrom:RequestForm): Pick<ChatAPIResponse, 'response'>;
+    preprocess():void;
+    postprocess():void;
+    request(requsetdata:RequestForm):Promise<ChatAIResponse>;
+    /**
+     * @return [url, data, config]
+     */
+    makeRequestData(form: RequestForm): [string, object, object];
+    handleResponse(response: any): Omit<ChatAIResponse['response'],'ok'|'http_status'|'http_status_text'>;
 }

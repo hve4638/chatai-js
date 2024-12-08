@@ -1,7 +1,5 @@
-import type { ChatRole, ChatType } from '../../types/request-form'
+import type { ChatRole, ChatType, RequestDebugOption } from '../../types/request-form'
 import type { RequestForm } from '../../types/request-form'
-import { ChatAPIResponse } from '../../types/response-data';
-import JSONSchema from '../../JSONSchema';
 
 import { OPENAI_GPT_URL, ROLE, ROLE_DEFAULT } from './data'
 
@@ -15,7 +13,7 @@ type GPTMessage = {
 }[];
 
 class OpenAIGPTAPI extends ChatAIAPI {
-    makeRequestData(form:RequestForm): [string, any] {
+    makeRequestData(form:RequestForm): [string, object, object] {
         assertNotNull(form.secret?.api_key, 'api_key is required');
 
         const message:GPTMessage = [];
@@ -65,47 +63,43 @@ class OpenAIGPTAPI extends ChatAIAPI {
             }
         }
         
-        const data = {
-            method : 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${form.secret.api_key}`
-            },
-            body: JSON.stringify(body)
+        const headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${form.secret.api_key}`
         }
-        return [url, data];
+        return [url, body, {headers}];
     }
 
-    responseThen(rawResponse: any, requestForm:RequestForm): Pick<ChatAPIResponse, 'response'> {
+    getMessageFromStreamChunk(chunk:any):string {
+        return chunk['choices'][0]['delta']['content'];
+    }
+
+    handleResponse(res: any) {
         let tokens: number;
         let warning: string | null;
         try {
-            tokens = rawResponse.usage.completion_tokens;
+            tokens = res.usage.completion_tokens;
         }
         catch (e) {
             tokens = 0;
         }
       
-        const reason = rawResponse.choices[0]?.finish_reason;
-        const text = rawResponse.choices[0]?.message?.content ?? '';
+        const reason = res.choices[0]?.finish_reason;
+        const text = res.choices[0]?.message?.content ?? '';
 
         if (reason === 'stop') warning = null;
         else if (reason === 'length') warning = 'max token limit';
         else warning = `unhandle reason : ${reason}`;
         
-        return {
-            response : {
-                ok : true,
-                http_status : -1,
-                raw : rawResponse,
+        return  {
+            raw : res,
 
-                content: [text],
-                warning : warning,
+            content: [text],
+            warning : warning,
 
-                tokens : tokens,
-                finish_reason : reason,
-            },
-        }
+            tokens : tokens,
+            finish_reason : reason,
+        };
     }
 }
 

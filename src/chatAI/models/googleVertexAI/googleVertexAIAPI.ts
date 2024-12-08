@@ -1,6 +1,7 @@
+import axios from 'axios'
 import { ChatRole, ChatType } from '../../types/request-form'
-import type { RequestForm, RequestOption } from '../../types/request-form'
-import { ChatAPIResponse } from '../../types/response-data'
+import type { RequestDebugOption, RequestForm, RequestOption } from '../../types/request-form'
+import { ChatAIResponse } from '../../types/response-data'
 
 import { VERTEXAI_URL, ROLE, ROLE_DEFAULT } from './data'
 
@@ -20,18 +21,17 @@ class GoogleVertexAIAPI extends ChatAIAPI {
     private static claude = new ClaudeAPI();
     private lasttoken:string | null = null;
 
-    override async request(form:RequestForm, option:RequestOption):Promise<ChatAPIResponse> {
-        const fetch = option.fetch;
+    override async request(form:RequestForm, debug:RequestDebugOption):Promise<ChatAIResponse> {
         let token = this.lasttoken;
 
-        const [url, data] = this.makeRequestData(form);
+        const [url, data, config] = this.makeRequestData(form);
         const refreshToken = async ()=>{
             await this.#refreshToken({
                 clientEmail : form.secret['clientemail'],
                 privateKey : form.secret['privatekey']
             });
-            this.updateData(data);
-            this.updateForm(form);
+            this.updateTokenToHeaders(config);
+            this.updateTokenToForm(form);
             token = this.lasttoken;
         }
 
@@ -40,27 +40,27 @@ class GoogleVertexAIAPI extends ChatAIAPI {
                 await refreshToken();
             }
             
-            const res = await fetch(url, data);
+            const res = await axios.post(url, data, config);
             if (res.status === 401) {
                 // 토큰 만료시 재시도
                 await refreshToken();
                 
-                const res =  await fetch(url, data);
-                return this.handleFetch({ res, form, url, data });
+                const res = await axios.post(url, data, config);
+                return this.handleRawResponse(res, { form, url, data, config });
             }
             else {
-                return this.handleFetch({ res, form, url, data });
+                return this.handleRawResponse(res, { form, url, data, config });
             }
         }
         catch (error:unknown) {
-            return this.handleFetchError({ error, form, url, data });
+            return this.handleFetchError(error, { form, url, data, config });
         }
         finally {
             this.lasttoken = token;
         }
     }
 
-    makeRequestData(form:RequestForm):[string, RequestInit] {
+    makeRequestData(form:RequestForm):[string, object, object] {
         const projectId = form.secret?.['projectid'];
         const privateKey = form.secret?.['privatekey'];
         const clientEmail = form.secret?.['clientemail'];
@@ -107,25 +107,24 @@ class GoogleVertexAIAPI extends ChatAIAPI {
             top_p : form.top_p ?? 1.0,
             top_k: 0,
         }
-        const data = {
-            method : 'POST',
-            headers: {
-                'Authorization' : `Bearer ${this.lasttoken}`,
-                'Content-Type' : 'application/json',
-                'charset' : 'utf-8'
-            },
-            body: JSON.stringify(body),
-        }
-        
-        return [url, data];
+        const headers = {
+            'Authorization' : `Bearer ${this.lasttoken}`,
+            'Content-Type' : 'application/json',
+            'charset' : 'utf-8'
+        };
+        return [url, body, {headers}];
     }
 
-    updateData(data:any) {
-        data['header']['Authorization'] = `Bearer ${this.lasttoken}`;
+    private updateTokenToHeaders(config:any) {
+        config['headers']['Authorization'] = `Bearer ${this.lasttoken}`;
     }
 
-    responseThen(rawResponse: any, requestForm:RequestForm): Pick<ChatAPIResponse, 'response'> {
-        return GoogleVertexAIAPI.claude.responseThen(rawResponse, requestForm);
+    private updateTokenToForm(form:RequestForm) {
+        form.secret['token'] = this.lasttoken;
+    }
+
+    handleResponse(rawResponse: any) {
+        return GoogleVertexAIAPI.claude.handleResponse(rawResponse);
     }
 
     async #refreshToken({clientEmail, privateKey}:{clientEmail:string, privateKey:string}) {
@@ -136,9 +135,6 @@ class GoogleVertexAIAPI extends ChatAIAPI {
         });
     }
 
-    private async updateForm(form:RequestForm) {
-        form.secret['token'] = this.lasttoken;
-    }
 }
 
 export default GoogleVertexAIAPI;

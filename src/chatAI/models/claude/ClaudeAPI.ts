@@ -1,5 +1,5 @@
 import { ChatRole, type RequestForm } from '../../types/request-form'
-import { ChatAPIResponse } from '../../types/response-data';
+import { ChatAIResponse } from '../../types/response-data';
 
 import { CLAUDE_URL, ROLE, ROLE_DEFAULT } from './data'
 
@@ -21,7 +21,7 @@ type ClaudeMessage = {
 }[];
 
 class ClaudeAPI extends ChatAIAPI {
-    makeRequestData(form:RequestForm): [string, any] {
+    makeRequestData(form:RequestForm): [string, object, object] {
         assertNotNull(form.secret?.api_key, 'api_key is required');
 
         let systemPrompt = '';
@@ -67,20 +67,15 @@ class ClaudeAPI extends ChatAIAPI {
             max_tokens: form.max_tokens ?? 1024,
             temperature: form.temperature ?? 1.0,
             top_p : form.top_p ?? 1.0,
-        }
-        const data = {
-            method : 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-api-key': form.secret.api_key,
-                'anthropic-version': '2023-06-01'
-            },
-            body: JSON.stringify(body)
-        }
-        
-        return [url, data];
+        };
+        const headers = {
+            'Content-Type': 'application/json',
+            'x-api-key': form.secret.api_key,
+            'anthropic-version': '2023-06-01'
+        };
+        return [url, body, {headers}];
     }
-    responseThen(rawResponse: any, requestForm:RequestForm): Pick<ChatAPIResponse, 'response'> {
+    handleResponse(rawResponse: any) {
         let tokens: number;
         let warning: string | null;
         try {
@@ -98,17 +93,13 @@ class ClaudeAPI extends ChatAIAPI {
         else warning = `unhandle reason : ${reason}`;
       
         return {
-            response : {
-                ok : true,
-                http_status : -1,
-                raw : rawResponse,
+            raw : rawResponse,
 
-                content: [text],
-                warning : warning,
+            content: [text],
+            warning : warning,
 
-                tokens : tokens,
-                finish_reason : reason,
-            }
+            tokens : tokens,
+            finish_reason : reason,
         }
     }
 }

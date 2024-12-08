@@ -30,6 +30,7 @@ export type RequestForm = {
         [key:string] : any;
     },
     
+    stream? : boolean;
     /** 응답 포맷을 강제하기 위해 사용 */
     response_format? : IJSONSchema;
 
@@ -55,9 +56,5 @@ export type RequestOption = {
 };
 
 export type RequestDebugOption = {
-    /** undefined가 아니라면 요청 data를 가져옵니다. */
-    requestData? : {
-        url?:string;
-        data?:any;
-    };
+    unmaskSecret? : boolean;
 }

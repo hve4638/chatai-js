@@ -1,5 +1,5 @@
 import type { RequestForm } from '../../types/request-form'
-import type { ChatAPIResponse } from '../../types/response-data';
+import type { ChatAIResponse } from '../../types/response-data';
 
 import { assertNotNull, bracketFormat } from '../../utils'
 
@@ -20,7 +20,7 @@ type GeminiMessage = {
 }[];
 
 class GoogleGeminiAPI extends ChatAIAPI {
-    makeRequestData(form:RequestForm):[string, any] {
+    makeRequestData(form:RequestForm):[string, object, object] {
         assertNotNull(form.secret?.api_key, 'form.secret.api_key is required');
         assertNotNull(form.model_detail, 'model_detail is required');
         
@@ -79,28 +79,24 @@ class GoogleGeminiAPI extends ChatAIAPI {
             safetySettings : GENIMI_OPTION_SAFETY
         };
         
-        const data = {
-            method : 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(body)
-        };
-
-        return [url, data];
+        const headers = {
+            'Content-Type': 'application/json'
+        }
+        return [url, body, {headers}];
     }
-    responseThen(rawResponse: any, requestFrom: RequestForm): Pick<ChatAPIResponse, 'response'> {
+    
+    handleResponse(res: any) {
         let tokens: number;
         let warning: string | null;
         try {
-            tokens = rawResponse.usageMetadata.candidatesTokenCount;
+            tokens = res.usageMetadata.candidatesTokenCount;
         }
         catch (e) {
             tokens = 0;
         }
       
-        const reason = rawResponse.candidates[0]?.finish_reason;
-        const text:string = rawResponse.candidates[0]?.content?.parts[0].text ?? '';
+        const reason = res.candidates[0]?.finishReason;
+        const text:string = res.candidates[0]?.content?.parts[0].text ?? '';
         
         if (reason == 'STOP') warning = null;
         else if (reason == 'SAFETY') warning = 'blocked by SAFETY';
@@ -108,17 +104,13 @@ class GoogleGeminiAPI extends ChatAIAPI {
         else warning = `unhandle reason : ${reason}`;
         
         return {
-            response : {
-                ok : true,
-                http_status : -1,
-                raw : rawResponse,
+            raw : res,
 
-                content: [text],
-                warning : warning,
+            content: [text],
+            warning : warning,
 
-                tokens : tokens,
-                finish_reason : reason,
-            },
+            tokens : tokens,
+            finish_reason : reason,
         }
     }
 }

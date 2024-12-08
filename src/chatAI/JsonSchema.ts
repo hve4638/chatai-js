@@ -70,26 +70,6 @@ class JSONSchema implements IJSONSchema {
     static String():Schema {
         return { type: 'string' };
     }
-
-    static isJSON(schema:BaseSchema) {
-        return schema.type === 'json';
-    }
-    static isString(schema:Schema) {
-        return schema.type === 'string';
-    }
-    static isNumber(schema:Schema) {
-        return schema.type === 'number';
-    }
-    static isBoolean(schema:Schema) {
-        return schema.type === 'boolean';
-    }
-    static isArray(schema:Schema) {
-        return schema.type === 'array';
-    }
-    static isObject(schema:Schema) {
-        return schema.type === 'object';
-    }
-
 }
 
 

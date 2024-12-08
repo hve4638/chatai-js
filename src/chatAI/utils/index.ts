@@ -1,3 +1,5 @@
+export { default as AsyncQueue } from './AsyncQueue';
+
 export function assertNotNull(data, errorMessage:string) {
     if (data == null) {
         throw new Error(errorMessage);
