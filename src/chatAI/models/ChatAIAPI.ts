@@ -1,9 +1,13 @@
-import type { IChatAIAPI } from '../types'
-import type { RequestForm, RequestOption, RequestDebugOption } from '../types/request-form'
-import { ChatAIResponse } from '../types/response-data';
-import { HTTPError } from '../errors'
+import type {
+    IChatAIAPI,
+    ChatAIResponse,
+    RequestForm,
+    RequestOption,
+    RequestDebugOption,
+} from '../types'
+import { RequestDataOption } from '../types/IChatAIAPI';
 import { AsyncQueue } from '../utils'
-import axios, { AxiosResponse } from 'axios'
+import axios, { AxiosResponse, AxiosError } from 'axios'
 
 abstract class ChatAIAPI implements IChatAIAPI {
     async preprocess() {
@@ -17,7 +21,7 @@ abstract class ChatAIAPI implements IChatAIAPI {
         form: RequestForm,
         debug: RequestDebugOption = {}
     ): Promise<ChatAIResponse> {
-        const [url, data, config] = this.makeRequestData(form);
+        const [url, data, config] = this.makeRequestData(form, { stream: false });
 
         try {
             const res = await axios.post(url, data, config);
@@ -28,8 +32,8 @@ abstract class ChatAIAPI implements IChatAIAPI {
                     secret: ChatAIAPI.deepCopy(form.secret)
                 };
                 ChatAIAPI.mask(maskedForm.secret)
-
-                const [url, data, config] = this.makeRequestData(maskedForm);
+                
+                const [url, data, config] = this.makeRequestData(maskedForm, { stream: false });
                 return await this.handleRawResponse(res, { form, url, data, config });
             }
             else {
@@ -109,99 +113,121 @@ abstract class ChatAIAPI implements IChatAIAPI {
         form: RequestForm,
         debug: RequestDebugOption = {}
     ) {
-        const [url, data, config] = this.makeRequestData(form);
+        const [url, data, config] = this.makeRequestData(form, { stream: true });
+        config['responseType'] = 'stream';
 
         try {
             const res = await axios.post(url, data, config);
 
-            return await this.handleStream(res, { form, url, data, config });
+            if (!debug.unmaskSecret) {
+                const maskedForm = {
+                    ...form,
+                    secret: ChatAIAPI.deepCopy(form.secret)
+                };
+                ChatAIAPI.mask(maskedForm.secret)
+
+                const [url, data, config] = this.makeRequestData(maskedForm, { stream: true });
+                config['responseType'] = 'stream';
+                return await this.handleStream(res, { form, url, data, config });
+            }
+            else {
+                return await this.handleStream(res, { form, url, data, config });
+            }
+
         }
         catch (error: unknown) {
-            await this.handleFetchError(error, { form, url, data, config });
-            throw error;
+            if (axios.isAxiosError(error)) {
+                return await this.handleStreamError(error, { form, url, data, config })
+            }
+            else {
+                throw error;
+            }
         }
     }
 
-    async handleStream(res: AxiosResponse, { form, url, data }: {
+    async handleStream(res: AxiosResponse, { form, url, data, config }: {
         form: RequestForm,
         url: string,
         data: object,
         config: object
     }): Promise<[AsyncGenerator<string, void, unknown>, Promise<ChatAIResponse>]> {
-        throw new Error('Not implemented');
-        // if (!res.body) {
-        //     throw new HTTPError(res, 'No body in response');
-        // }
+        const chunkInputQueue = new AsyncQueue();
+        const messageQueue = new AsyncQueue();
+        chunkInputQueue.enableBlockIfEmpty(true);
+        messageQueue.enableBlockIfEmpty(true);
 
-        // const queue = new AsyncQueue();
-        // queue.enableBlockIfEmpty(true);
+        async function *messageGenerator(queue:AsyncQueue) {
+            while (true) {
+                const text = await queue.dequeue();
+                if (text === null) {
+                    break;
+                }
+                yield text as string;
+            }
+        }
+        const responseResolve = async () => {
+            const response = await this.handleStreamChunk(chunkInputQueue, messageQueue);
 
-        // const resultText:string[] = [];
+            return {
+                response: {
+                    ...response,
+                    ok: true,
+                    http_status: res.status,
+                    http_status_text: res.statusText,
+                },
+                request: {
+                    url: url,
+                    headers: (config as any).headers ?? {},
+                    data: data,
+                }
+            }
+        };
+        
+        const decoder = new TextDecoder();
+        res.data.on('data', (chunk: AllowSharedBufferSource | undefined) => {
+            const lines = decoder.decode(chunk, { stream: true }).split('\n');
+            for (const line of lines) {
+                chunkInputQueue.enqueue(line);
+            }
+        });
+        res.data.on('end', () => {
+            chunkInputQueue.enableBlockIfEmpty(false);
+        });
+        
+        return [messageGenerator(messageQueue), responseResolve()];
+    }
 
-        // async function read() {
-        //     console.log('[read] start!')
-        //     const reader = res.body!.getReader();
-        //     const decoder = new TextDecoder();
+    protected async handleStreamError(error: AxiosError, { form, url, data, config }: {
+        form: RequestForm,
+        url: string,
+        data: object,
+        config: object
+    }): Promise<[AsyncGenerator<string, void, unknown>, Promise<ChatAIResponse>]> {
+        async function *emptyGenerator() {
+            return;
+        }
+        const resultPromise = new Promise<ChatAIResponse>((resolve) => {
+            resolve({
+                request: {
+                    form: form,
+                    url: url,
+                    headers: (config as any).headers ?? {},
+                    data: data,
+                },
+                response : {
+                    ok: false,
+                    http_status: error.response?.status ?? 0,
+                    http_status_text: error.response?.statusText ?? '',
+                    raw: error.response?.data ?? {},
+                    content: [],
+                    warning: null,
+                    tokens: 0,
+                    finish_reason: '',
+                }
+            });
+        });
 
-        //     let done = false;
-        //     while(!done) {
-        //         const { value, done: readerDone } = await reader.read();
-        //         const text = decoder.decode(value, { stream: true });
-        //         const lines = text.split('\n').filter(line => line.trim() !== '');
-
-        //         console.log('[read] : ', text)
-        //         const sleep = new Promise(resolve => setTimeout(resolve, 100))
-        //         await sleep;
-        //         for (const line of lines) {
-        //             if (!line.startsWith('data:')) {
-        //                 continue;
-        //             }
-
-        //             const json = line.slice(5).trim();
-        //             if (json === '[DONE]') {
-        //                 done = true;
-        //                 break;
-        //             }
-
-        //             try {
-        //                 const data = JSON.parse(json);
-        //                 const text = data.choices?.[0]?.delta?.content;
-        //                 if (text) {
-        //                     resultText.push(text);
-        //                     queue.enqueue(text);
-        //                 }
-        //             }
-        //             catch(e) {
-        //                 console.error('\n\n\n')
-        //                 console.error('Error parsing stream data:', e);
-        //                 console.error(data);
-        //                 console.error('line');
-        //                 console.error(line);
-        //             }
-        //         }
-        //     }
-        //     queue.enableBlockIfEmpty(false);
-        // }
-        // async function *stream() {
-        //     while(true) {
-        //         console.log('[stream] wait')
-        //         const text = await queue.dequeue();
-        //         console.log('[stream] read!')
-        //         if (text === null) {
-        //             break;
-        //         }
-        //         yield text as string;
-        //     }
-        // }
-        // async function result() {
-        //     console.log('[result] read start')
-        //     await read();
-        //     console.log('[result] read end')
-
-        //     return resultText.join('') as any;
-        // }
-
-        // return [stream(), result()];
+        return [emptyGenerator(), resultPromise];
     }
 
     protected async handleFetchError(
@@ -251,7 +277,8 @@ abstract class ChatAIAPI implements IChatAIAPI {
         }
     }
 
-    abstract makeRequestData(form: RequestForm): [string, object, object];
+    abstract handleStreamChunk(chunkOutputQueue:AsyncQueue, messageInputQueue:AsyncQueue):Promise<Omit<ChatAIResponse['response'],'ok'|'http_status'|'http_status_text'>>;
+    abstract makeRequestData(form: RequestForm, option: RequestDataOption): [string, object, object];
     abstract handleResponse(data: any): Omit<ChatAIResponse['response'], 'ok' | 'http_status' | 'http_status_text'>;
 
 }

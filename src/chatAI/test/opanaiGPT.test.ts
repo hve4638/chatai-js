@@ -20,7 +20,7 @@ describe('transform RequestForm', () => {
             bot('bot-message')
         ]
     };
-    const [testFormUrl, testFormData, testFormConfig] = openAIGPTAPI.makeRequestData(testForm);
+    const [testFormUrl, testFormData, testFormConfig] = openAIGPTAPI.makeRequestData(testForm, {stream:false});
 
     test('valid url', async () => {
         const expected = 'https://api.openai.com/v1/chat/completions';

@@ -9,5 +9,5 @@ export {
 } from './types/request-form'
 export { default as JSONSchema } from './JSONSchema'
 
-import { default as AIModelAPI } from './AIModelAPI'
-export default AIModelAPI;
+import { default as ChatAI } from './ChatAI'
+export default ChatAI;

@@ -9,9 +9,9 @@ import {
 } from './models';
 import type { ChatAIResponse } from './types/response-data';
 
-class AIModelAPI {
+class ChatAI {
     private chatAPIs:{[key:string]:ChatAIAPI} = {};
-
+    
     constructor() {
         this.refreshCache();
     }
@@ -29,12 +29,12 @@ class AIModelAPI {
         return response;
     }
 
-    async stream(form:RequestForm):Promise<[AsyncGenerator<string, void, undefined>, Promise<ChatAIResponse>]> {
+    async stream(form:RequestForm, debug?:RequestDebugOption):Promise<[AsyncGenerator<string, void, undefined>, Promise<ChatAIResponse>]> {
         const modelAPI = this.chatAPIs[form.model];
 
-        const [messages, response] = await modelAPI.stream(form);
+        const [messages, response] = await modelAPI.stream(form, debug);
         return [messages, response];
     }
 }
 
-export default AIModelAPI;
+export default ChatAI;

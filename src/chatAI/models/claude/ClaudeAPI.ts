@@ -3,7 +3,7 @@ import { ChatAIResponse } from '../../types/response-data';
 
 import { CLAUDE_URL, ROLE, ROLE_DEFAULT } from './data'
 
-import { assertNotNull, bracketFormat } from '../../utils'
+import { assertNotNull, AsyncQueue, bracketFormat } from '../../utils'
 
 import ChatAIAPI from '../ChatAIAPI'
 
@@ -101,6 +101,10 @@ class ClaudeAPI extends ChatAIAPI {
             tokens : tokens,
             finish_reason : reason,
         }
+    }
+    
+    async handleStreamChunk(chunkOutputQueue:AsyncQueue, messageInputQueue:AsyncQueue):Promise<Omit<ChatAIResponse['response'],'ok'|'http_status'|'http_status_text'>> {
+        throw new Error('Not implemented.');
     }
 }
 
