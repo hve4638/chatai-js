@@ -1,18 +1,19 @@
 import type { Schema, BaseSchema, IJSONSchema } from './response-schema'
 
-export const ChatRole = {
+export const CHAT_ROLE = {
     'USER' : 'USER',
     'BOT' : 'BOT',
     'SYSTEM' : 'SYSTEM',
 } as const;
-export type ChatRole = typeof ChatRole[keyof typeof ChatRole];
+export type CHAT_ROLE = typeof CHAT_ROLE[keyof typeof CHAT_ROLE];
 
-export const ChatType = {
+export const CHAT_TYPE = {
     'TEXT' : 'TEXT',
-    'IMAGE' : 'IMAGE',
+    'IMAGE_URL' : 'IMAGE_URL',
+    'IMAGE_BASE64' : 'IMAGE_BASE64',
     'FILE' : 'FILE',
 } as const;
-export type ChatType = typeof ChatType[keyof typeof ChatType];
+export type CHAT_TYPE = typeof CHAT_TYPE[keyof typeof CHAT_TYPE];
 
 export type RequestForm = {
     model : string;
@@ -39,14 +40,16 @@ export type RequestForm = {
 }
 
 export type Message = {
-    role : ChatRole;
+    role : CHAT_ROLE;
     content: Content[];
 }
 
 export type Content = {
-    chatType : ChatType;
+    chatType : CHAT_TYPE;
     text? : string;
+    image_url? : string;
     image? : string;
+    extension? : string;
 }
 
 export type RequestAPI = (url:string, init:RequestInit)=>Promise<any>;

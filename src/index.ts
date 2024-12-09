@@ -1,7 +1,9 @@
 export {
     Models, ModelNames,
+    CHAT_ROLE,
+    CHAT_TYPE,
     ChatRole,
-    ChatType,
+    Chat,
 } from './chatAI'
 export type {
     RequestForm,
@@ -11,5 +13,5 @@ export {
     JSONSchema
 } from './chatAI'
 
-import AIModelAPI from './chatAI';
-export default AIModelAPI;
+import ChatAI from './chatAI';
+export default ChatAI;

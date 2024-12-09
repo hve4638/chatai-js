@@ -1,4 +1,4 @@
-import type { ChatRole, ChatType, RequestDebugOption } from '../../types/request-form'
+import { CHAT_ROLE, CHAT_TYPE, RequestDebugOption } from '../../types/request-form'
 import type { RequestForm } from '../../types/request-form'
 
 import { OPENAI_GPT_URL, ROLE, ROLE_DEFAULT } from './data'
@@ -11,7 +11,7 @@ import { ChatAIResponse } from '../../types'
 
 type GPTMessage = {
     role: ROLE;
-    content: string;
+    content: string|{type:string, text:string}|{type:string, image_url:string}[];
 }[];
 
 class OpenAIGPTAPI extends ChatAIAPI {
@@ -20,6 +20,45 @@ class OpenAIGPTAPI extends ChatAIAPI {
 
         const message:GPTMessage = [];
         for(const m of form.message) {
+            if (m.content.length === 0) continue;
+            if (m.content.length === 1) {
+                message.push({
+                    role: ROLE[m.role] ?? ROLE_DEFAULT,
+                    content: m.content[0].text!
+                });
+            }
+            else {
+                const chatBlock = {
+                    role: ROLE[m.role] ?? ROLE_DEFAULT,
+                    content: [] as any[]
+                };
+                for (const chat of m.content) {
+                    if (chat.chatType === CHAT_TYPE.TEXT) {
+                        chatBlock.content.push({
+                            type : 'text',
+                            text : chat.text
+                        });
+                    }
+                    else if (chat.chatType === CHAT_TYPE.IMAGE_URL) {
+                        chatBlock.content.push({
+                            type : 'image_url',
+                            image_url : {
+                                url : chat.image_url
+                            }
+                        });
+                    }
+                    else if (chat.chatType === CHAT_TYPE.IMAGE_BASE64) {
+                        chatBlock.content.push({
+                            type : 'image_url',
+                            image_url : {
+                                url : `data:image/${chat.extension ?? 'jpeg'};base64,${chat.image_url}`
+                            }
+                        });
+                    }
+                }
+
+                message.push(chatBlock);
+            }
             message.push({
                 role: ROLE[m.role] ?? ROLE_DEFAULT,
                 content: m.content[0].text!
@@ -82,15 +121,7 @@ class OpenAIGPTAPI extends ChatAIAPI {
     }
 
     handleResponse(res: any) {
-        let tokens: number;
         let warning: string | null;
-        try {
-            tokens = res.usage.completion_tokens;
-        }
-        catch (e) {
-            tokens = 0;
-        }
-      
         const reason = res.choices[0]?.finish_reason;
         const text = res.choices[0]?.message?.content ?? '';
 
@@ -104,7 +135,11 @@ class OpenAIGPTAPI extends ChatAIAPI {
             content: [text],
             warning : warning,
 
-            tokens : tokens,
+            tokens : {
+                input: res.usage?.prompt_tokens ?? 0,
+                output: res.usage?.completion_tokens ?? 0,
+                total : res.usage?.total_tokens ?? 0,
+            },
             finish_reason : reason,
         };
     }
@@ -115,7 +150,11 @@ class OpenAIGPTAPI extends ChatAIAPI {
             raw: {},
             content: [],
             warning: null,
-            tokens: 0,
+            tokens: {
+                input: 0,
+                output: 0,
+                total: 0,
+            },
             finish_reason: '',
         }
         let partOfChunk:string|null = null;
@@ -148,9 +187,25 @@ class OpenAIGPTAPI extends ChatAIAPI {
                 console.error('Incomplete chunk', text);
                 continue;
             }
-            const content = chunkData?.choices?.[0]?.delta?.content ?? '';
-            messageInputQueue.enqueue(content);
-            contents.push(content);
+            
+            const choice = chunkData.choices?.[0];
+            if (choice) {
+                if (choice.finish_reason) {
+                    response.finish_reason = choice.finish_reason;
+                    
+                    if (choice.finish_reason === 'stop') response.warning = null;
+                    else if (choice.finish_reason === 'length') response.warning = 'max token limit';
+                    else response.warning = `unhandle reason : ${response.warning}`;
+                }
+                const content = choice.delta?.content ?? '';
+                messageInputQueue.enqueue(content);
+                contents.push(content);
+            }
+            if (chunkData.usage) {
+                response.tokens.input = (chunkData.usage?.prompt_tokens ?? 0) as number;
+                response.tokens.output = (chunkData.usage?.completion_tokens ?? 0) as number;
+                response.tokens.total = (chunkData.usage?.total_tokens ?? 0) as number;
+            }
         }
         messageInputQueue.enableBlockIfEmpty(false);
         response.content.push(contents.join(''));

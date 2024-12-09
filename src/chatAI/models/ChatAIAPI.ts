@@ -7,7 +7,8 @@ import type {
 } from '../types'
 import { RequestDataOption } from '../types/IChatAIAPI';
 import { AsyncQueue } from '../utils'
-import axios, { AxiosResponse, AxiosError } from 'axios'
+import { AxiosResponse, AxiosError } from 'axios'
+import { default as axios } from 'axios'
 
 abstract class ChatAIAPI implements IChatAIAPI {
     async preprocess() {
@@ -77,7 +78,7 @@ abstract class ChatAIAPI implements IChatAIAPI {
             return {
                 request: {
                     url: url,
-                    headers: data.headers as object,
+                    headers: (config as any).headers,
                     data: data,
                 },
                 response: {
@@ -102,7 +103,11 @@ abstract class ChatAIAPI implements IChatAIAPI {
                     raw: res.data,
                     content: [],
                     warning: null,
-                    tokens: 0,
+                    tokens: {
+                        input: 0,
+                        output: 0,
+                        total : 0,
+                    },
                     finish_reason: '',
                 }
             }
@@ -221,7 +226,11 @@ abstract class ChatAIAPI implements IChatAIAPI {
                     raw: error.response?.data ?? {},
                     content: [],
                     warning: null,
-                    tokens: 0,
+                    tokens: {
+                        input: 0,
+                        output: 0,
+                        total : 0,
+                    },
                     finish_reason: '',
                 }
             });
@@ -271,7 +280,11 @@ abstract class ChatAIAPI implements IChatAIAPI {
                 raw: errorData,
                 content: [],
                 warning: null,
-                tokens: 0,
+                tokens: {
+                    input: 0,
+                    output: 0,
+                    total : 0,
+                },
                 finish_reason: '',
             }
         }

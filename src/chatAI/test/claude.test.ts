@@ -1,4 +1,4 @@
-import { RequestForm, ModelNames, Models, ChatRole } from '../'
+import { RequestForm, ModelNames, Models, CHAT_ROLE } from '../'
 import { user, bot, system } from './message'
 import { ClaudeAPI } from '../models';
 

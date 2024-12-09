@@ -12,5 +12,8 @@ export type {
     ChatAIResponse
 } from './response-data'
 export type {  
-    ChatRole, ChatType, RequestAPI, RequestForm, RequestOption, RequestDebugOption
+    RequestAPI, RequestForm, RequestOption, RequestDebugOption
+} from './request-form'
+export {  
+    CHAT_ROLE, CHAT_TYPE
 } from './request-form'

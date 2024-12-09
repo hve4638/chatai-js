@@ -1,4 +1,4 @@
-import { RequestForm, ModelNames, ChatRole } from '../'
+import { RequestForm, ModelNames, CHAT_ROLE } from '../'
 import { user, bot, system } from './message'
 import { GoogleGeminiAPI } from '../models'
 
@@ -20,7 +20,7 @@ describe('transform RequestForm', () => {
             bot('bot-message')
         ]
     };
-    const [testFormUrl, testFormData, testFormConfig] = geminiAPI.makeRequestData(testForm);
+    const [testFormUrl, testFormData, testFormConfig] = geminiAPI.makeRequestData(testForm, {stream:false});
 
     test('valid url', async () => {
         // URL에 API키와 모델명이 포함됨

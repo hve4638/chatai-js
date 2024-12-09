@@ -4,9 +4,12 @@ export type {
     RequestOption,
 } from './types/request-form'
 export {
-    ChatRole,
-    ChatType
+    CHAT_ROLE,
+    CHAT_TYPE
 } from './types/request-form'
+export {
+    Chat, ChatRole
+} from './Chat'
 export { default as JSONSchema } from './JSONSchema'
 
 import { default as ChatAI } from './ChatAI'

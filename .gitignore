@@ -3,7 +3,8 @@ yarn.lock
 dist/
 .npmrc
 .ts
-.tsbuildinfo
+.tsbuildinfo.esm
+.tsbuildinfo.cjs
 .env
 
 .vscode/

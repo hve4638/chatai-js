@@ -1,4 +1,4 @@
-import { RequestForm, ModelNames, ChatRole } from '../'
+import { RequestForm, ModelNames, CHAT_ROLE } from '../'
 import { user, bot, system } from './message'
 import { OpenAIGPTAPI } from '../models';
 

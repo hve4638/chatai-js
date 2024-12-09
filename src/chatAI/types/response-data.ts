@@ -16,7 +16,12 @@ export interface ChatAIResponse {
         content : string[];         // 응답 텍스트
         warning : string|null;      // 한줄 경고 (토큰 한도, safety 등)
         
-        tokens : number;            // 응답 토큰 수
+        tokens : {
+            input : number;
+            output : number;
+            total : number;
+            detail? : object;
+        };
         finish_reason : string;     // 응답 종료 원인
     };
 }

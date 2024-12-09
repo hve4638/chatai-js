@@ -1,5 +1,5 @@
-import axios from 'axios'
-import { ChatRole, ChatType } from '../../types/request-form'
+import {default as axios} from 'axios'
+import { CHAT_ROLE, CHAT_TYPE } from '../../types/request-form'
 import type { RequestDebugOption, RequestForm, RequestOption } from '../../types/request-form'
 import { ChatAIResponse } from '../../types/response-data'
 
@@ -79,7 +79,7 @@ class GoogleVertexAIAPI extends ChatAIAPI {
         const messages:VertexAIMessage = [];
 
         for (const m of form.message) {
-            if (m.role === ChatRole.SYSTEM) {
+            if (m.role === CHAT_ROLE.SYSTEM) {
                 if (messages.length === 0) {
                     systemPrompt += m.content[0].text!;
                 }

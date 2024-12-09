@@ -1,9 +1,9 @@
-import { RequestForm, Models, ChatRole } from '../';
+import { RequestForm, Models, CHAT_ROLE } from '../';
 import { Message } from '../types/request-form';
 
 export function bot(textMessage:string):Message {
     return {
-        role: ChatRole.BOT,
+        role: CHAT_ROLE.BOT,
         content: [
             {
                 chatType: 'TEXT',
@@ -14,7 +14,7 @@ export function bot(textMessage:string):Message {
 }
 export function user(textMessage:string):Message {
     return {
-        role: ChatRole.USER,
+        role: CHAT_ROLE.USER,
         content: [
             {
                 chatType: 'TEXT',
@@ -25,7 +25,7 @@ export function user(textMessage:string):Message {
 }
 export function system(textMessage:string):Message {
     return {
-        role: ChatRole.SYSTEM,
+        role: CHAT_ROLE.SYSTEM,
         content: [
             {
                 chatType: 'TEXT',
