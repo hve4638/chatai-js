@@ -5,6 +5,8 @@ dist/
 .ts
 .tsbuildinfo.esm
 .tsbuildinfo.cjs
+.tsbuildinfo
 .env
 
 .vscode/
+/*.tgz

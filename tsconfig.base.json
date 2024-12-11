@@ -1,19 +1,10 @@
 {
     "compilerOptions": {
-        "incremental": true,
-        "tsBuildInfoFile": "./.tsbuildinfo",
         
         "isolatedModules": true,
-        
-        "target": "es2020",
-        "module": "CommonJS",
-        
-        "moduleResolution": "node",
-
-        "outDir": "./dist",
-        "rootDir": "./src",
-
+        "moduleResolution": "node10",
         "esModuleInterop": true, /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */
+        "isolatedModules": true,
         
         "forceConsistentCasingInFileNames": true, /* Ensure that casing is correct in imports. */
         
@@ -34,5 +25,9 @@
     },
     "include": [
         "./src/**/*"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist"
     ]
 }
