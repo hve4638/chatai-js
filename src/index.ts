@@ -15,7 +15,7 @@ export type {
 export {
     Chat, ChatRole
 } from './Chat'
-export { default as JSONSchema } from './JSONSchema'
+export { JSONFormat, JSONSchema } from './JSONSchema'
 
 import { default as ChatAI } from './ChatAI'
 export default ChatAI;

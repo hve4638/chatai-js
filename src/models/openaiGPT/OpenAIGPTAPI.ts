@@ -8,6 +8,7 @@ import { assertFieldExists, assertNotNull, AsyncQueue } from '../../utils'
 import ChatAIAPI from '../ChatAIAPI'
 import { RequestDataOption } from '../../types/IChatAIAPI'
 import { ChatAIResponse } from '../../types'
+import { JSONSchema } from '../../JSONSchema'
 
 type GPTMessage = {
     role: ROLE;
@@ -80,32 +81,37 @@ class OpenAIGPTAPI extends ChatAIAPI {
             body['stream_options'] = {"include_usage": true};
         }
         if (form.response_format) {
-            if (form.response_format.hasSchema()) {
-                body['response_format'] = {
-                    'type' : 'json_schema',
-                    'json_schema' : {
-                        'name' : form.response_format.name,
-                        'strict' : true,
-                        'schema' : form.response_format.parse({
-                            'array' : (element)=> ({'type':'array', 'items':element}),
-                            'object' : (properties, options) => {
-                                return {
-                                    'type': 'object',
-                                    'properties': properties,
-                                    'required': options.required ?? [],
-                                    'additionalProperties': options.allow_additional_properties ?? false
-                                }
-                            },
-                            'boolean' : ()=>({'type' : 'boolean'}),
-                            'number' : ()=>({'type' : 'number'}),
-                            'string' : ()=>({'type' : 'string'}),
-                        }),
+            if (form.response_format.type === 'json') {
+                const jsonFormat = form.response_format;
+
+                if (!jsonFormat.schema) {
+                    body['response_format'] = {
+                        'type' : 'json_object'
                     }
                 }
-            }
-            else {
-                body['response_format'] = {
-                    'type' : 'json_object'
+                else {
+                    const schema = JSONSchema.parse(jsonFormat.schema, {
+                        'array' : (element)=> ({'type':'array', 'items':element}),
+                        'object' : (properties, options) => {
+                            return {
+                                'type': 'object',
+                                'properties': properties,
+                                'required': options.required ?? [],
+                                'additionalProperties': options.allow_additional_properties ?? false
+                            }
+                        },
+                        'boolean' : ()=>({'type' : 'boolean'}),
+                        'number' : ()=>({'type' : 'number'}),
+                        'string' : ()=>({'type' : 'string'}),
+                    });
+                    body['response_format'] = {
+                        'type' : 'json_schema',
+                        'json_schema' : {
+                            'name' : jsonFormat.name,
+                            'strict' : true,
+                            'schema' : schema,
+                        }
+                    }
                 }
             }
         }

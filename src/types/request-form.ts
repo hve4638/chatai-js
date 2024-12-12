@@ -1,4 +1,4 @@
-import type { Schema, BaseSchema, IJSONSchema } from './response-schema'
+import type { ResponseFormat } from './response-format'
 
 export const CHAT_ROLE = {
     'USER' : 'USER',
@@ -32,8 +32,9 @@ export type RequestForm = {
     },
     
     stream? : boolean;
+
     /** 응답 포맷을 강제하기 위해 사용 */
-    response_format? : IJSONSchema;
+    response_format? : ResponseFormat;
 
     /** 모델별로 적용되는 추가 기능 */
     additional? : any;

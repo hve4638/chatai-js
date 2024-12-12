@@ -1,3 +1,4 @@
+import { JSONSchema } from '../../JSONSchema';
 import { ChatAIError, ModelUnsupportError } from '../../errors';
 import { RequestDataOption } from '../../types/IChatAIAPI';
 import { CHAT_TYPE, type RequestForm } from '../../types/request-form'
@@ -75,23 +76,28 @@ class GoogleGeminiAPI extends ChatAIAPI {
             topP: form.top_p ?? 1.0,
         };
         if (form.response_format) {
-            if (!form.response_format.hasSchema()) {
-                generationConfig['response_mime_type'] = 'application/json';
-            }
-            else {
-                generationConfig['response_mime_type'] = 'application/json';
-                generationConfig['response_schema'] = form.response_format.parse({
-                    'array' : (element)=> ({'type':'ARRAY', 'items':element}),
-                    'object' : (properties, options) => {
-                        return {
-                            'type': 'OBJECT',
-                            'properties': properties,
-                        }
-                    },
-                    'boolean' : ()=>({'type' : 'BOOLEAN'}),
-                    'number' : ()=>({'type' : 'NUMBER'}),
-                    'string' : ()=>({'type' : 'STRING'}),
-                });
+            if (form.response_format.type == 'json') {
+                const jsonFormat = form.response_format;
+                if (!jsonFormat.schema) {
+                    generationConfig['response_mime_type'] = 'application/json';
+                }
+                else {
+                    const schema = JSONSchema.parse(jsonFormat.schema, {
+                        'array' : (element)=> ({'type':'ARRAY', 'items':element}),
+                        'object' : (properties, options) => {
+                            return {
+                                'type': 'OBJECT',
+                                'properties': properties,
+                            }
+                        },
+                        'boolean' : ()=>({'type' : 'BOOLEAN'}),
+                        'number' : ()=>({'type' : 'NUMBER'}),
+                        'string' : ()=>({'type' : 'STRING'}),
+                    });
+
+                    generationConfig['response_mime_type'] = 'application/json';
+                    generationConfig['response_schema'] = schema;
+                }
             }
         }
         if (form.additional?.response_mime_type) {

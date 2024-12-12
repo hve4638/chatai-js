@@ -1,51 +1,28 @@
-import { Schema, BaseSchema, IJSONSchema, JSONSchemaHandler, JSONObjectSchemaOptions } from './types'
+import type { JSONFormat, RawJSONSchema, JSONSchemaHandler, JSONObjectSchemaOptions } from './types'
 
-type JSONSchemaArgs = {
-    name?:string;
-    schema?:BaseSchema;
+export function JSONFormat(name:string, schema:RawJSONSchema|undefined):JSONFormat {
+    return {
+        type : 'json',
+        name, schema
+    }
 }
 
-class JSONSchema implements IJSONSchema {
-    private _name:string;
-    private schema?:BaseSchema;
-
-    constructor({
-        name,
-        schema
-    }:JSONSchemaArgs) {
-        this._name = name ?? '';
-        this.schema = schema;
-    }
-    
-    get name() {
-        return this._name;
-    }
-
-    hasSchema() {
-        return this.schema !== undefined;
-    }
-
-    parse(handler:JSONSchemaHandler) {
-        if(!this.hasSchema()) {
-            return undefined;
-        }
-        else {
-            return this.parseSchema(this.schema!, handler);
-        }
-    }
-
-    private parseSchema(schema:BaseSchema, handler:JSONSchemaHandler) {
+export const JSONSchema = {
+    hasSchema(jsonFormat:JSONFormat) {
+        return jsonFormat.schema !== undefined;
+    },
+    parse(schema:RawJSONSchema, handler:JSONSchemaHandler) {
         switch(schema.type) {
             case 'array':
             {
-                const items = this.parseSchema(schema.items, handler);
+                const items = this.parse(schema.items, handler);
                 return handler.array(items);
             }   
             case 'object':
             {
                 const properties = {}
                 for (const key in schema.properties) {
-                    properties[key] = this.parseSchema(schema.properties[key], handler);
+                    properties[key] = this.parse(schema.properties[key], handler);
                 }
                 return handler.object(properties, schema.options);
             }
@@ -53,24 +30,20 @@ class JSONSchema implements IJSONSchema {
             case 'number': return handler.number();
             case 'string': return handler.string();
         }
-    }
-
-    static Object(properties:{[key:string]:Schema}, options:JSONObjectSchemaOptions):Schema {
+    },
+    Object(properties:{[key:string]:RawJSONSchema}, options:JSONObjectSchemaOptions):RawJSONSchema {
         return { type: 'object', properties, options };
-    }
-    static Array(items:Schema):Schema {
+    },
+    Array(items:RawJSONSchema):RawJSONSchema {
         return { type: 'array', items };
-    }
-    static Boolean():Schema {
+    },
+    Boolean():RawJSONSchema {
         return { type: 'boolean' };
-    }
-    static Number():Schema {
+    },
+    Number():RawJSONSchema {
         return { type: 'number' };
-    }
-    static String():Schema {
+    },
+    String():RawJSONSchema {
         return { type: 'string' };
     }
-}
-
-
-export default JSONSchema;
+} as const;

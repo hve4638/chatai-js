@@ -1,10 +1,11 @@
 export type {
-    Schema,
-    BaseSchema,
+    RawJSONSchema,
     JSONObjectSchemaOptions,
-    IJSONSchema,
-    JSONSchemaHandler
-} from './response-schema'
+    JSONSchemaHandler,
+    ResponseFormat,
+    TextFormat,
+    JSONFormat
+} from './response-format'
 
 export type { default as IChatAIAPI } from './IChatAIAPI'
 
