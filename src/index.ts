@@ -1,17 +1,18 @@
-export {
-    Models, ModelNames,
-    CHAT_ROLE,
-    CHAT_TYPE,
-    ChatRole,
-    Chat,
-} from './chatAI'
+export { ChatAIError, HTTPError, InvalidModelError, ModelUnsupportError } from './errors'
+
+export { ModelNames, Models } from './data'
 export type {
     RequestForm,
     RequestOption,
-} from './chatAI'
+} from './types/request-form'
 export {
-    JSONSchema
-} from './chatAI'
+    CHAT_ROLE,
+    CHAT_TYPE
+} from './types/request-form'
+export {
+    Chat, ChatRole
+} from './Chat'
+export { default as JSONSchema } from './JSONSchema'
 
-import ChatAI from './chatAI';
+import { default as ChatAI } from './ChatAI'
 export default ChatAI;

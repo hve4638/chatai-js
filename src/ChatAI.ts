@@ -22,7 +22,7 @@ class ChatAI {
         this.chatAPIs[ModelNames.GOOGLE_GEMINI] = new GoogleGeminiAPI();
         this.chatAPIs[ModelNames.GOOGLE_VERTEXAI] = new GoogleVertexAIAPI();
     }
-
+    
     async request(form:RequestForm, debug?:RequestDebugOption):Promise<ChatAIResponse> {
         const modelAPI = this.chatAPIs[form.model];
         const response = await modelAPI.request(form, debug);
