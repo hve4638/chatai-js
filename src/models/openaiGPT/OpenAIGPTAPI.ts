@@ -3,7 +3,7 @@ import type { RequestForm } from '../../types/request-form'
 
 import { OPENAI_GPT_URL, ROLE, ROLE_DEFAULT } from './data'
 
-import { assertNotNull, AsyncQueue } from '../../utils'
+import { assertFieldExists, assertNotNull, AsyncQueue } from '../../utils'
 
 import ChatAIAPI from '../ChatAIAPI'
 import { RequestDataOption } from '../../types/IChatAIAPI'
@@ -16,7 +16,8 @@ type GPTMessage = {
 
 class OpenAIGPTAPI extends ChatAIAPI {
     makeRequestData(form:RequestForm, option: RequestDataOption): [string, object, object] {
-        assertNotNull(form.secret?.api_key, 'api_key is required');
+        assertFieldExists(form.secret.api_key, 'secret.api_key');
+        assertFieldExists(form.model_detail, 'model_detail');
 
         const message:GPTMessage = [];
         for(const m of form.message) {

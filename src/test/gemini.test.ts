@@ -1,4 +1,4 @@
-import { RequestForm, ModelNames, CHAT_ROLE } from '../'
+import { RequestForm, Models, CHAT_ROLE } from '../'
 import { user, bot, system } from './message'
 import { GoogleGeminiAPI } from '../models'
 
@@ -6,7 +6,7 @@ const geminiAPI = new GoogleGeminiAPI();
 
 describe('transform RequestForm', () => {
     const testForm:RequestForm = {
-        model: ModelNames.CLAUDE,
+        model: Models.CLAUDE,
         model_detail: 'model-name',
         secret : {
             api_key : 'api-key',

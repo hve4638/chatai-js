@@ -54,7 +54,7 @@ abstract class ChatAIAPI implements IChatAIAPI {
                     if (typeof data[key] === 'object' && data[key] !== null) {
                         this.mask(data[key]);
                     } else {
-                        data[key] = '****';
+                        data[key] = 'SECRET';
                     }
                 }
             }

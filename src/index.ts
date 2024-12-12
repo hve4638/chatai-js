@@ -1,6 +1,6 @@
 export { ChatAIError, HTTPError, InvalidModelError, ModelUnsupportError } from './errors'
 
-export { ModelNames, Models } from './data'
+export { Models, ModelDetails } from './data'
 export type {
     RequestForm,
     RequestOption,
@@ -9,6 +9,9 @@ export {
     CHAT_ROLE,
     CHAT_TYPE
 } from './types/request-form'
+export type {
+    ChatAIResponse
+} from './types/response-data'
 export {
     Chat, ChatRole
 } from './Chat'

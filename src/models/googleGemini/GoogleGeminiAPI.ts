@@ -3,7 +3,7 @@ import { RequestDataOption } from '../../types/IChatAIAPI';
 import { CHAT_TYPE, type RequestForm } from '../../types/request-form'
 import type { ChatAIResponse } from '../../types/response-data';
 
-import { assertNotNull, AsyncQueue, bracketFormat } from '../../utils'
+import { assertFieldExists, assertNotNull, AsyncQueue, bracketFormat } from '../../utils'
 
 import ChatAIAPI from '../ChatAIAPI'
 
@@ -22,8 +22,8 @@ type GeminiMessage = {
 
 class GoogleGeminiAPI extends ChatAIAPI {
     makeRequestData(form:RequestForm, option:RequestDataOption):[string, object, object] {
-        assertNotNull(form.secret?.api_key, 'form.secret.api_key is required');
-        assertNotNull(form.model_detail, 'model_detail is required');
+        assertFieldExists(form.secret?.api_key, 'secret.api_key');
+        assertFieldExists(form.model_detail, 'model_detail');
         
         let url = bracketFormat(GENIMIAPI_URL_FORMAT, {
             apikey : form.secret.api_key,

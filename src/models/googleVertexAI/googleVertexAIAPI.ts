@@ -5,7 +5,7 @@ import { ChatAIResponse } from '../../types/response-data'
 
 import { VERTEXAI_URL, ROLE, ROLE_DEFAULT } from './data'
 
-import { assertNotNull, AsyncQueue, bracketFormat } from '../../utils'
+import { assertFieldExists, assertNotNull, AsyncQueue, bracketFormat } from '../../utils'
 
 import ChatAIAPI from '../ChatAIAPI'
 
@@ -64,9 +64,10 @@ class GoogleVertexAIAPI extends ChatAIAPI {
         const projectId = form.secret?.['projectid'];
         const privateKey = form.secret?.['privatekey'];
         const clientEmail = form.secret?.['clientemail'];
-        assertNotNull(clientEmail, 'clientemail is required');
-        assertNotNull(privateKey, 'privatekey is required');
-        assertNotNull(projectId, 'projectid is required');
+        assertFieldExists(projectId, 'secret.api_key');
+        assertFieldExists(privateKey, 'secret.privatekey');
+        assertFieldExists(clientEmail, 'secret.clientemail');
+        assertFieldExists(form.model_detail, 'model_detail');
 
         const LOCATION = 'us-east5';
         const url = bracketFormat(VERTEXAI_URL, {

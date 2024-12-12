@@ -3,7 +3,7 @@ import { ChatAIResponse } from '../../types/response-data';
 
 import { CLAUDE_URL, ROLE, ROLE_DEFAULT } from './data'
 
-import { assertNotNull, AsyncQueue, bracketFormat } from '../../utils'
+import { assertNotNull, AsyncQueue, bracketFormat, assertFieldExists } from '../../utils'
 
 import ChatAIAPI from '../ChatAIAPI'
 import { ModelUnsupportError } from '../../errors';
@@ -25,13 +25,13 @@ type ClaudeMessage = {
 
 class ClaudeAPI extends ChatAIAPI {
     makeRequestData(form: RequestForm): [string, object, object] {
-        assertNotNull(form.secret?.api_key, 'api_key is required');
+        assertFieldExists(form.secret.api_key, 'secret.api_key');
+        assertFieldExists(form, 'model_detail');
 
         let systemPrompt = '';
         const messages: ClaudeMessage = [];
         for (const message of form.message) {
             const role = ROLE[message.role];
-            //const text = message.content[0].text!;
 
             if (role === ROLE.SYSTEM) {
                 const text = message.content[0].text!;
