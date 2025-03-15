@@ -7,14 +7,12 @@ export type {
     JSONFormat
 } from './response-format'
 
-export type { default as IChatAIAPI } from './IChatAIAPI'
-
 export type {
-    ChatAIResponse
-} from './response-data'
+    ChatAIResult
+} from './response'
 export type {  
-    RequestAPI, RequestForm, RequestOption, RequestDebugOption
-} from './request-form'
+    ChatAIRequestForm, RequestDebugOption
+} from './request'
 export {  
-    CHAT_ROLE, CHAT_TYPE
-} from './request-form'
+    ChatRoleName, ChatType
+} from './request'
