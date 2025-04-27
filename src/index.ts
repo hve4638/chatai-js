@@ -8,6 +8,7 @@ export type {
     ChatAIRequestForm,
     ChatRoleName,
     ChatType,
+    ChatMessage,
 } from '@/types/request'
 export type {
     ChatAIResult

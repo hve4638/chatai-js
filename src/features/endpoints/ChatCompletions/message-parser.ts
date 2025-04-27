@@ -1,8 +1,8 @@
 import { ChatRoleName, ChatType, ChatAIRequestForm } from '@/types';
 import { ChatCompletionsMessage, Roles } from './types';
-import { Message } from '@/types/request';
+import { ChatMessage } from '@/types/request';
 
-export function parseChatCompletionsMessage(messages:Message[]) {
+export function parseChatCompletionsMessage(messages:ChatMessage[]) {
     const result: ChatCompletionsMessage = [];
     for (const m of messages) {
         if (m.content.length === 0) continue;

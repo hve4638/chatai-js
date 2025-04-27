@@ -56,6 +56,7 @@ describe('ClaudeEndpoint request form', () => {
             max_tokens : 512,
             temperature : 1.2,
             top_p : 0.8,
+            stream : false,
         }
         const actual = await endpoint.makeRequestData(form, option);
         expect(actual).toEqual(expected);

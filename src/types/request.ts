@@ -57,7 +57,7 @@ export type ChatAIRequestForm = {
     provider? : KnownProvider;
     model_name : string;
     
-    message : Message[];
+    message : ChatMessage[];
 
     temperature? : number;
     max_tokens? : number;
@@ -88,7 +88,7 @@ export type ChatAIRequestOption = {
     stream: boolean;
 }
 
-export type Message = {
+export type ChatMessage = {
     role : ChatRoleName;
     content: Content[];
 }

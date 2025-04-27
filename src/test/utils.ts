@@ -1,7 +1,7 @@
 import { ChatRoleName } from '@/types';
-import { Message } from '@/types/request'
+import { ChatMessage } from '@/types/request'
 
-export function assistant(textMessage:string):Message {
+export function assistant(textMessage:string):ChatMessage {
     return {
         role: ChatRoleName.Assistant,
         content: [
@@ -12,7 +12,7 @@ export function assistant(textMessage:string):Message {
         ]
     }
 }
-export function user(textMessage:string):Message {
+export function user(textMessage:string):ChatMessage {
     return {
         role: ChatRoleName.User,
         content: [
@@ -23,7 +23,7 @@ export function user(textMessage:string):Message {
         ]
     }
 }
-export function system(textMessage:string):Message {
+export function system(textMessage:string):ChatMessage {
     return {
         role: ChatRoleName.System,
         content: [

@@ -1,9 +1,9 @@
 import { ChatRoleName, ChatType, ChatAIRequestForm } from '@/types';
 import { GenerativeLanguageMessage, Roles } from './types';
 import { ModelUnsupportError } from '@/errors';
-import { Message } from '@/types/request';
+import { ChatMessage } from '@/types/request';
 
-export function parseMessage(messages:Message[]) {
+export function parseMessage(messages:ChatMessage[]) {
     const contents:GenerativeLanguageMessage = [];
 
     for(const request of messages) {

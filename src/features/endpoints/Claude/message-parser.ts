@@ -1,9 +1,9 @@
 import { ChatRoleName, ChatType, ChatAIRequestForm } from '@/types';
 import { ClaudeMessage, Roles } from './types';
 import { ModelUnsupportError } from '@/errors';
-import { Message } from '@/types/request';
+import { ChatMessage } from '@/types/request';
 
-export function parseClaudeMessage(messages: Message[]): { message: ClaudeMessage, systemPrompt: string } {
+export function parseClaudeMessage(messages: ChatMessage[]): { message: ClaudeMessage, systemPrompt: string } {
     let systemPrompt = '';
     const result:ClaudeMessage = [];
     
