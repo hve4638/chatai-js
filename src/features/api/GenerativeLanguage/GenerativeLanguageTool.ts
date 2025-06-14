@@ -131,14 +131,17 @@ class GenerativeLanguageTool {
         const thinkingContent: string[] = [];
         const content: string[] = [];
         const candidate = data.candidates[0]
-        for (const part of candidate.content.parts) {
-            if (part.thought) {
-                thinkingContent.push(part.text);
-            }
-            else {
-                content.push(part.text);
+        if (candidate.content.parts) { // 추론 모델에서 MAX_TOKENS로 끝났을 때 parts가 없을 수 있음
+            for (const part of candidate.content.parts) {
+                if (part.thought) {
+                    thinkingContent.push(part.text);
+                }
+                else {
+                    content.push(part.text);
+                }
             }
         }
+
         if (content.length === 0) {
             content.push('');
         }

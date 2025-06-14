@@ -32,18 +32,14 @@ class VertexAITool {
 
     // Generative Language API
     static parseGenerativeLanguageBody(response: GenerativeLanguageRequest, option: ChatAIRequestOption) {
+        return GenerativeLanguageTool.parseBody(response);
         const messages = GenerativeLanguageTool.parseMessages(response.messages);
-        const body = {
-            "contents": [{
-                "role": "user",
-                "parts": [
-                    {
-                        "text": "Say just 'hello'."
-                    }
-                ]
-            }],
-        }
-        return body;
+        return {
+            contents: messages,
+            generationConfig: {
+                maxOutputTokens: 1024,
+            }
+        };
     }
 
     static parseAnthropicResponseOK(response: any) {
