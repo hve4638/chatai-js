@@ -1,4 +1,4 @@
-import ChatAI from '@/features/chatai'
+export { default as ChatAI } from '@/features/chatai'
 export { ChatAIError, HTTPError, InvalidModelError, ModelUnsupportError } from '@/errors'
 
 export {
@@ -18,4 +18,4 @@ export {
     JSONFormat, JSONSchema,
 } from '@/features/chatai'
 
-export default ChatAI;
+// export default ChatAI;

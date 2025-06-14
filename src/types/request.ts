@@ -39,7 +39,7 @@ export const ChatType = {
 } as const;
 export type ChatType = typeof ChatType[keyof typeof ChatType];
 
-export type ChatAIRequestForm = {
+export interface ChatAIRequestForm {
     /**
      * 요청 URL 지정
      *

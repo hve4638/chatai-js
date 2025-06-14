@@ -1,3 +1,4 @@
+import { z } from 'zod';
 export type ResponseFormat = TextFormat | JSONFormat;
 
 export type TextFormat = {
@@ -8,6 +9,17 @@ export type JSONFormat = {
     type: 'json';
     name : string;
     schema?: RawJSONSchema;
+}
+
+export type JSONObjectFormat = {
+    type: 'json-object';
+    name : string;
+}
+
+export type JSONSchemaFormat = {
+    type: 'json-schema';
+    name : string;
+    schema: z.ZodObject<any>;
 }
 
 export type RawJSONSchema = {

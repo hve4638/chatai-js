@@ -11,3 +11,5 @@ dist/
 .vscode/
 /*.tgz
 .rollup.cache
+
+src/playground.ts

@@ -16,3 +16,5 @@ export type {
 export {  
     ChatRoleName, ChatType
 } from './request'
+
+export type { ChatAIResponse } from './fetch-response'
