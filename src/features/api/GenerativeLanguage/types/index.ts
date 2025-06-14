@@ -5,7 +5,7 @@ export type {
     SafetyFilters,
     HarmCategory,
 } from './request';
-
+export type { GenerativeLanguageResponse } from './response';
 export type {
     GenerativeLanguageBody,
     GenerationConfig,
@@ -13,4 +13,6 @@ export type {
     SafetySettings,
     SafetyFilterThreshold
 } from './body';
+
 export { DefaultRole, Roles } from './role';
+

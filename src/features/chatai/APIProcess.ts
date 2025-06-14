@@ -40,7 +40,6 @@ class APIProcess {
                     }
                     else {
                         if (error instanceof AxiosError) {
-                            console.error('Axios error occurred:', error);
                             return [
                                 false,
                                 requestArgs,

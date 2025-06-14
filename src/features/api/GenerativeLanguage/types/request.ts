@@ -9,7 +9,7 @@ export interface GenerativeLanguageRequest extends BaseRequest{
     response_format?: ResponseFormat;
     
     thinking_tokens?: number;
-    think_summary?: boolean;
+    thinking_summary?: boolean;
 }
 export interface GenerativeLanguageData extends GenerativeLanguageRequest, APIKeyAuth {}
 export interface VertexAIGenerativeLanguageData extends GenerativeLanguageRequest, VertexAIAuth {}

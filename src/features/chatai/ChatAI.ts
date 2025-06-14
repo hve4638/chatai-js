@@ -13,28 +13,37 @@ import {
 
     GenerativeLanguageAPI,
     type GenerativeLanguageData,
+    ResponsesData,
     VertexAIAPI,
     VertexAIData,
 
 } from '@/features/api';
 import APIProcess from './APIProcess';
+import ResponsesAPI from '../api/Responses/ResponsesAPI';
 
 class ChatAI {
-    /** OpenAI 모델의 Endpoint */
+    /** OpenAI 구 API */
     static async requestChatCompletion(data:ChatCompletionsData, debug:RequestDebugOption = {}):Promise<ChatAIResult> {
         const api = new ChatCompletionsAPI(data, { stream: false });
 
         return await this.request(api, debug);
     }
 
-    /** Google 모델의 Endpoint */
+    /** OpenAI 신규 API */
+    static async requestResponses(data:ResponsesData, debug:RequestDebugOption = {}):Promise<ChatAIResult> {
+        const api = new ResponsesAPI(data, { stream: false });
+
+        return await this.request(api, debug);
+    }
+
+    /** Google API */
     static async requestGenerativeLanguage(data:GenerativeLanguageData, debug:RequestDebugOption = {}):Promise<ChatAIResult> {
         const api = new GenerativeLanguageAPI(data, { stream: false });
 
         return await this.request(api, debug);
     }
 
-    /** Anthropic 모델의 Endpoint */
+    /** Anthropic API */
     static async requestAnthropic(data:AnthropicData, debug:RequestDebugOption = {}):Promise<ChatAIResult> {
         const api = new AnthropicAPI(data, { stream: false });
 

@@ -1,7 +1,8 @@
 import { ChatRoleName, ChatType, ChatAIRequestForm, ChatAIResponse } from '@/types';
-import { AnthropicBody, AnthropicRequest, AnthropicMessages, Roles } from './types';
+import { AnthropicBody, AnthropicRequest, AnthropicMessages, Roles, AnthropicResponse } from './types';
 import { ModelUnsupportError } from '@/errors';
 import { ChatAIRequestOption, ChatMessage } from '@/types/request';
+import { ChatAIResultResponse } from '@/types/response';
 
 class AnthropicAPITool {
     static parseBody(request: AnthropicRequest, option: ChatAIRequestOption): AnthropicBody {
@@ -13,12 +14,19 @@ class AnthropicAPITool {
         const body: AnthropicBody = {
             model: request.model,
             messages: messages,
-            system: system,
-            max_tokens: request.max_tokens ?? 1024,
-            temperature: request.temperature ?? 1.0,
-            top_p: request.top_p ?? 1.0,
-            stream: option.stream,
         };
+
+        if (system) body.system = system;
+        if (option.stream) body.stream = true;
+        if (request.max_tokens) body.max_tokens = request.max_tokens;
+        if (request.temperature) body.temperature = request.temperature;
+        if (request.top_p) body.top_p = request.top_p;
+        if (request.thinking_tokens) {
+            body.thinking = {
+                type: 'enabled',
+                budget_tokens: request.thinking_tokens,
+            }
+        }
         return body;
     }
 
@@ -81,32 +89,45 @@ class AnthropicAPITool {
         }
     }
 
-    static parseResponseOK(response: ChatAIResponse) {
-        let warning: string | null;
-        
+    static parseResponseOK(response: ChatAIResponse<AnthropicResponse>): ChatAIResultResponse {
         const data = response.data;
-        const reason = data.stop_reason;
-        const text = data.content[0]?.text ?? '';
 
+        const thinkingContent: string[] = [];
+        const content: string[] = [];
+        for (const c of data.content) {
+            if (c.type === 'thinking') {
+                thinkingContent.push(c.thinking);
+            }
+            else {
+                content.push(c.text);
+            }
+        }
+        if (content.length === 0) {
+            content.push('');
+        }
+
+        let warning: string | null;
+        const reason = data.stop_reason;
         if (reason == 'end_turn') warning = null;
         else if (reason == 'max_tokens') warning = 'max token limit';
         else warning = `unhandle reason : ${reason}`;
 
-        const input_tokens = data.usage?.input_tokens ?? 0;
-        const output_tokens = data.usage?.output_tokens ?? 0;
+        const input_tokens = data.usage.input_tokens;
+        const output_tokens = data.usage.output_tokens;
         return {
             ok : true,
             http_status : response.status,
             http_status_text : response.message,
             raw: data,
 
-            content: [text],
+            thinking_content: thinkingContent,
+            content: content,
             warning: warning,
 
             tokens: {
-                input: input_tokens,
-                output: output_tokens,
-                total: input_tokens + output_tokens
+                input: data.usage.input_tokens,
+                output: data.usage.output_tokens,
+                total: input_tokens + output_tokens,
             },
             finish_reason: reason,
         }

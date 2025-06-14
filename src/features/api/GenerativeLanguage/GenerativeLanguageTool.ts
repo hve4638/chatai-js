@@ -1,6 +1,6 @@
-import { GenerationConfig, GenerativeLanguageBody, GenerativeLanguageMessages, GenerativeLanguageRequest, HarmCategory, Roles, SafetyFilters, SafetySettings } from './types';
+import { GenerationConfig, GenerativeLanguageBody, GenerativeLanguageMessages, GenerativeLanguageRequest, GenerativeLanguageResponse, HarmCategory, Roles, SafetyFilters, SafetySettings } from './types';
 
-import { ChatRoleName, ChatType, ChatAIRequestForm, ResponseFormat } from '@/types';
+import { ChatRoleName, ChatType, ChatAIRequestForm, ResponseFormat, ChatAIResponse } from '@/types';
 import { ModelUnsupportError } from '@/errors';
 import { ChatMessage } from '@/types/request';
 import { JSONSchema } from '@/features/chatai';
@@ -15,7 +15,7 @@ type GoogleResponseFormat = {
 class GenerativeLanguageTool {
     static parseBody(request: GenerativeLanguageRequest): GenerativeLanguageBody {
         const contents: GenerativeLanguageMessages = GenerativeLanguageTool.parseMessages(request.messages);
-        const generationConfig:GenerationConfig = {
+        const generationConfig: GenerationConfig = {
             maxOutputTokens: request.max_tokens ?? 1024,
             temperature: request.temperature ?? 1.0,
             topP: request.top_p ?? 1.0,
@@ -25,6 +25,15 @@ class GenerativeLanguageTool {
         if (responseFormat.response_mime_type) {
             generationConfig.response_mime_type = responseFormat.response_mime_type;
             generationConfig.response_schema = responseFormat.response_schema;
+        }
+
+        if (request.thinking_summary) {
+            generationConfig.thinkingConfig ??= {}
+            generationConfig.thinkingConfig.includeThoughts = request.thinking_summary;
+        }
+        if (request.thinking_tokens) {
+            generationConfig.thinkingConfig ??= {}
+            generationConfig.thinkingConfig.thinkingBudget = request.thinking_tokens;
         }
 
         const safetySettings = GenerativeLanguageTool.parseSafetySettings(request.safety_settings);
@@ -115,12 +124,26 @@ class GenerativeLanguageTool {
         });
     }
 
-    static parseResponseOK(response: any): ChatAIResultResponse {
-        const data = response.data
+    static parseResponseOK(response: ChatAIResponse<GenerativeLanguageResponse>): ChatAIResultResponse {
+        const data = response.data;
         let warning: string | null;
 
-        const reason = data.candidates[0]?.finishReason;
-        const text: string = data.candidates[0]?.content?.parts?.[0]?.text ?? '';
+        const thinkingContent: string[] = [];
+        const content: string[] = [];
+        const candidate = data.candidates[0]
+        for (const part of candidate.content.parts) {
+            if (part.thought) {
+                thinkingContent.push(part.text);
+            }
+            else {
+                content.push(part.text);
+            }
+        }
+        if (content.length === 0) {
+            content.push('');
+        }
+
+        const reason = candidate.finishReason;
 
         if (reason == 'STOP') warning = null;
         else if (reason == 'SAFETY') warning = 'blocked by SAFETY';
@@ -133,7 +156,8 @@ class GenerativeLanguageTool {
             http_status_text: response.message,
             raw: data,
 
-            content: [text],
+            thinking_content: thinkingContent,
+            content: content,
             warning: warning,
 
             tokens: {

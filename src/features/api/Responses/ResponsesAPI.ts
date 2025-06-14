@@ -5,38 +5,30 @@ import { ChatAIResultResponse } from '@/types/response';
 import { AsyncQueueConsumer } from '@/utils/AsyncQueue';
 import { assertFieldExists, AsyncQueue } from '@/utils'
 
-import type { ChatCompletionsData } from './types';
 import { BaseChatAIRequestAPI } from '../base';
-import ChatCompletionsTool from './ChatCompletionsTool';
 import { ChatAIResponse } from '@/types';
+import { ResponsesData } from './types';
+import ResponsesTool from './ResponsesTool';
 
-class ChatCompletionsAPI extends BaseChatAIRequestAPI<ChatCompletionsData> {
-    static readonly DEFAULT_BASE_URL = 'https://api.openai.com';
-    static readonly ENDPOINT_URL = '/v1/chat/completions';
-    static readonly DEFAULT_OPTIONS = {
-        TOP_P: 1.0,
-        TEMPERATURE: 1.0,
-        MAX_OUTPUT_TOKENS: 1024,
-    };
+class ResponsesAPI extends BaseChatAIRequestAPI<ResponsesData> {
+    static readonly DEFAULT_URL = 'https://api.openai.com';
+    static readonly DEFAULT_PATH = '/v1/responses';
 
-    constructor(body: ChatCompletionsData, option: ChatAIRequestOption) {
+    constructor(body: ResponsesData, option: ChatAIRequestOption) {
         super(body, option);
     }
-
-    get baseURLDomain() { return ChatCompletionsAPI.DEFAULT_BASE_URL; }
-    get baseURLPath() { return ChatCompletionsAPI.ENDPOINT_URL; }
 
     mask() {
         const copiedBody = structuredClone(this.body);
         this.maskField(copiedBody.auth)
 
-        const copied = new ChatCompletionsAPI(copiedBody, this.option);
+        const copied = new ResponsesAPI(copiedBody, this.option);
         return copied;
     }
 
     async makeRequestURL() {
-        const domain = this.body.endpoint_url ?? this.baseURLDomain;
-        const path = this.body.endpoint_path ?? this.baseURLPath;
+        const domain = this.body.endpoint_url ?? ResponsesAPI.DEFAULT_URL;
+        const path = this.body.endpoint_path ?? ResponsesAPI.DEFAULT_PATH;
         return domain + path;
     }
     async makeRequestConfig(): Promise<AxiosRequestConfig<any>> {
@@ -54,39 +46,11 @@ class ChatCompletionsAPI extends BaseChatAIRequestAPI<ChatCompletionsData> {
         }
     }
     async makeRequestData(): Promise<object> {
-        const body = ChatCompletionsTool.parseBody(this.body, this.option);
-        return body;
+        return ResponsesTool.parseBody(this.body, this.option);
     }
     async parseResponseOK(request: ChatAIRequest, response: ChatAIResponse) {
-        const data = response.data;
-
-        let warning: string | null;
-        const reason = data.choices[0]?.finish_reason;
-        const text = data.choices[0]?.message?.content ?? '';
-
-        if (reason === 'stop') warning = null;
-        else if (reason === 'length') warning = 'max token limit';
-        else warning = `unhandle reason : ${reason}`;
-
-        return {
-            ok: true,
-            http_status: response.status,
-            http_status_text: response.message,
-            raw: data,
-
-            thinking_content: [],
-            content: [text],
-            warning: warning,
-
-            tokens: {
-                input: data.usage?.prompt_tokens ?? 0,
-                output: data.usage?.completion_tokens ?? 0,
-                total: data.usage?.total_tokens ?? 0,
-            },
-            finish_reason: reason,
-        };
+        return ResponsesTool.parseResponseOK(response);
     }
-
 
     getMessageFromStreamChunk(chunk: any): string {
         return chunk['choices'][0]['delta']['content'];
@@ -184,4 +148,4 @@ class ChatCompletionsAPI extends BaseChatAIRequestAPI<ChatCompletionsData> {
     }
 }
 
-export default ChatCompletionsAPI;
+export default ResponsesAPI;

@@ -33,7 +33,12 @@ class ChatCompletionsTool {
             if (m.content.length === 1) {
                 result.push({
                     role: Roles[m.role] ?? Roles[ChatRoleName.User],
-                    content: m.content[0].text!
+                    content: [
+                        {
+                            type: 'text',
+                            text: m.content[0].text ?? '',
+                        }
+                    ]
                 });
             }
             else {

@@ -6,7 +6,9 @@ export type {
     AnthropicData,
     VertexAIAnthropicData,
 } from './request';
-
+export type {
+    AnthropicResponse
+} from './response';
 export type {
     AnthropicBody,
     AnthropicMessages

@@ -2,7 +2,7 @@ import { Roles } from './roles';
 
 export type ChatCompletionsMessages = {
     role: Roles;
-    content: string | { type: string, text: string } | { type: string, image_url: string }[];
+    content: ({ type: 'text', text: string } | { type: 'image_url', image_url: string })[];
 }[];
 export interface ChatCompletionsBody {
     model: string;

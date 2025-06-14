@@ -1,6 +1,6 @@
-export interface ChatAIResponse {
+export interface ChatAIResponse<TData = any> {
     code?: string;
     status: number;
     message: string;
-    data?: any;
+    data: TData;
 }

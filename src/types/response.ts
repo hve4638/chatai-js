@@ -19,6 +19,7 @@ export interface ChatAIResultResponse {
     http_status_text : string;
     raw : object;               // 응답 원본
     
+    thinking_content : string[]; // 추론 중 텍스트 (thinking 단계에서의 응답)
     content : string[];         // 응답 텍스트
     warning : string|null;      // 한줄 경고 (토큰 한도, safety 등)
     
@@ -26,7 +27,10 @@ export interface ChatAIResultResponse {
         input : number;
         output : number;
         total : number;
-        detail? : object;
+        detail? : {
+            cache_input?: number;
+            thinking_output?: number;
+        };
     };
     finish_reason : string;     // 응답 종료 원인
 }
