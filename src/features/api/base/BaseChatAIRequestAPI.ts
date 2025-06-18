@@ -1,7 +1,7 @@
-import { ChatAIRequest, ValidChatRequestForm } from '@/types/request';
-import { ChatAIResultResponse } from '@/types/response';
-import { EndpointAction, ChatAIRequestOption } from '../types';
+import { ChatAIRequest } from '@/types';
+import { ChatAIResultResponse, FinishReason } from '@/types/response';
 import type { BaseRequest } from '@/types/request-data';
+import { EndpointAction, ChatAIRequestOption } from '../types';
 
 import { AxiosResponse, AxiosRequestConfig } from 'axios'
 import { AsyncQueue } from '@/utils';
@@ -56,13 +56,14 @@ abstract class BaseChatAIRequestAPI<TBody extends BaseRequest = BaseRequest> {
             http_status_text: response.message,
             raw: response.data,
             content: [],
+            thinking_content: [],
             warning: null,
             tokens: {
                 input: 0,
                 output: 0,
                 total : 0,
             },
-            finish_reason: '',
+            finish_reason: FinishReason.Error,
         }
     }
     
@@ -86,13 +87,14 @@ abstract class BaseChatAIRequestAPI<TBody extends BaseRequest = BaseRequest> {
             http_status_text: 'OK',
             raw: {},
             content: [],
+            thinking_content: [],
             warning: null,
             tokens: {
                 input: 0,
                 output: 0,
                 total : 0,
             },
-            finish_reason: '',
+            finish_reason: FinishReason.End,
         }
 
         while (true) {
@@ -139,13 +141,14 @@ abstract class BaseChatAIRequestAPI<TBody extends BaseRequest = BaseRequest> {
             http_status_text: 'OK',
             raw: {},
             content: [],
+            thinking_content: [],
             warning: null,
             tokens: {
                 input: 0,
                 output: 0,
-                total : 0,
+                total: 0,
             },
-            finish_reason: '',
+            finish_reason: FinishReason.Unknown,
         }
 
         let partOfChunk:string|null = null;

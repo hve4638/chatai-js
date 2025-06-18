@@ -10,6 +10,7 @@ export type {
     GenerativeLanguageBody,
     GenerationConfig,
     GenerativeLanguageMessages,
+    GenerativeLanguageMessagePart,
     SafetySettings,
     SafetyFilterThreshold
 } from './body';

@@ -11,7 +11,8 @@ export type {
 } from './response';
 export type {
     AnthropicBody,
-    AnthropicMessages
+    AnthropicMessages,
+    AnthropicMessageContent,
 } from './body';
 export type {
     ClaudeStreamData,

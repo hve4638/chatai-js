@@ -1,8 +1,5 @@
-import axios, { AxiosResponse } from 'axios';
-import type { ChatAIRequest, ChatAIRequestOption, ChatAIRequestForm, RequestDebugOption, ValidChatRequestForm } from '@/types/request';
-import type { ChatAIResult, ChatAIResultRequest, ChatAIResultResponse } from '@/types/response';
-
-
+import type { RequestDebugOption } from './types'
+import type { ChatAIResult } from '@/types/response'
 import {
     AnthropicAPI,
     type AnthropicData,
@@ -16,12 +13,13 @@ import {
     ResponsesData,
     VertexAIAPI,
     VertexAIData,
-
-} from '@/features/api';
-import APIProcess from './APIProcess';
-import ResponsesAPI from '../api/Responses/ResponsesAPI';
+} from '@/features/api'
+import APIProcess from './APIProcess'
+import ResponsesAPI from '../api/Responses/ResponsesAPI'
 
 class ChatAI {
+    private constructor() {}
+
     /** OpenAI 구 API */
     static async requestChatCompletion(data:ChatCompletionsData, debug:RequestDebugOption = {}):Promise<ChatAIResult> {
         const api = new ChatCompletionsAPI(data, { stream: false });

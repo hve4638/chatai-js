@@ -3,7 +3,7 @@ import { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { bracketFormat } from '@/utils';
 import { AsyncQueueConsumer } from '@/utils/AsyncQueue';
 
-import type { ChatAIRequest, ChatAIRequestOption } from '@/types/request'
+import type { ChatAIRequest, ChatAIRequestOption } from '@/types';
 import type { ChatAIResultResponse } from '@/types/response';
 
 import {
@@ -71,85 +71,93 @@ class GenerativeLanguageAPI extends BaseChatAIRequestAPI<GenerativeLanguageData>
         return body;
     }
     async parseResponseOK(request: ChatAIRequest, response: ChatAIResponse): Promise<ChatAIResultResponse> {
-        return GenerativeLanguageTool.parseResponseOK(response);
+        return GenerativeLanguageTool.parseResponseOK(response as ChatAIResponse<any>);
     }
 
-    async mergeStreamFragment(streamConsumer: AsyncQueueConsumer<string>): Promise<unknown | null> {
-        let partOfChunk: string | null = null;
-        while (true) {
-            const line = await streamConsumer.dequeue();
-            if (line === null) return null;
-
-            let fragment: string;
-            if (partOfChunk === null) {
-                if (!line.startsWith('data:')) {
-                    continue;
-                }
-
-                fragment = line.slice(5).trim();
-            }
-            else {
-                fragment = partOfChunk + line;
-                partOfChunk = null;
-            }
-
-            try {
-                return JSON.parse(fragment);
-            }
-            catch (e) {
-                partOfChunk = fragment;
-                console.error('Incomplete stream data : ', fragment);
-                continue;
-            }
-        }
+    async mergeStreamFragment() {
+        throw new Error('Not implemented');
     }
 
-    async parseStreamData(data: unknown, resultResponse: ChatAIResultResponse): Promise<string | undefined> {
-        const streamData = data as {
-            usageMetadata?: {
-                promptTokenCount?: number,
-                candidatesTokenCount?: number,
-                totalTokenCount?: number,
-            },
-            candidates?: {
-                finishReason?: string,
-                content?: {
-                    parts: {
-                        text?: string
-                    }[]
-                }
-            }[],
-            modelVersion?: string,
-        };
-
-        const usage = streamData.usageMetadata;
-        if (usage) {
-            resultResponse.tokens = {
-                input: usage.promptTokenCount ?? 0,
-                output: usage.candidatesTokenCount ?? 0,
-                total: usage.totalTokenCount ?? 0
-            }
-        }
-
-        const firstCandidate = streamData.candidates?.[0];
-        if (!firstCandidate) {
-            return;
-        }
-        if (firstCandidate.finishReason) {
-            const reason = firstCandidate.finishReason;
-            resultResponse.finish_reason = firstCandidate.finishReason;
-
-            let warning: string | null;
-            if (reason == 'STOP') warning = null;
-            else if (reason == 'SAFETY') warning = 'blocked by SAFETY';
-            else if (reason == 'MAX_TOKENS') warning = 'max token limit';
-            else warning = `unhandle reason : ${reason}`;
-
-            resultResponse.warning = warning;
-        }
-
-        return firstCandidate.content?.parts[0]?.text;
+    async parseStreamData():Promise<string | undefined> {
+        throw new Error('Not implemented');
     }
+
+    // async mergeStreamFragment(streamConsumer: AsyncQueueConsumer<string>): Promise<unknown | null> {
+    //     let partOfChunk: string | null = null;
+    //     while (true) {
+    //         const line = await streamConsumer.dequeue();
+    //         if (line === null) return null;
+
+    //         let fragment: string;
+    //         if (partOfChunk === null) {
+    //             if (!line.startsWith('data:')) {
+    //                 continue;
+    //             }
+
+    //             fragment = line.slice(5).trim();
+    //         }
+    //         else {
+    //             fragment = partOfChunk + line;
+    //             partOfChunk = null;
+    //         }
+
+    //         try {
+    //             return JSON.parse(fragment);
+    //         }
+    //         catch (e) {
+    //             partOfChunk = fragment;
+    //             console.error('Incomplete stream data : ', fragment);
+    //             continue;
+    //         }
+    //     }
+    // }
+
+    // async parseStreamData(data: unknown, resultResponse: ChatAIResultResponse): Promise<string | undefined> {
+    //     const streamData = data as {
+    //         usageMetadata?: {
+    //             promptTokenCount?: number,
+    //             candidatesTokenCount?: number,
+    //             totalTokenCount?: number,
+    //         },
+    //         candidates?: {
+    //             finishReason?: string,
+    //             content?: {
+    //                 parts: {
+    //                     text?: string
+    //                 }[]
+    //             }
+    //         }[],
+    //         modelVersion?: string,
+    //     };
+
+    //     const usage = streamData.usageMetadata;
+    //     if (usage) {
+    //         resultResponse.tokens = {
+    //             input: usage.promptTokenCount ?? 0,
+    //             output: usage.candidatesTokenCount ?? 0,
+    //             total: usage.totalTokenCount ?? 0
+    //         }
+    //     }
+
+    //     const firstCandidate = streamData.candidates?.[0];
+    //     if (!firstCandidate) {
+    //         return;
+    //     }
+    //     if (firstCandidate.finishReason) {
+    //         const reason = firstCandidate.finishReason;
+    //         resultResponse.finish_reason = firstCandidate.finishReason;
+
+    //         let warning: string | null;
+    //         if (reason == 'STOP') warning = null;
+    //         else if (reason == 'SAFETY') warning = 'blocked by SAFETY';
+    //         else if (reason == 'MAX_TOKENS') warning = 'max token limit';
+    //         else warning = `unhandle reason : ${reason}`;
+
+    //         resultResponse.warning = warning;
+    //     }
+
+    //     return firstCandidate.content?.parts[0]?.text;
+    // }
 
     // handleResponse(res: any) {
     //     let warning: string | null;

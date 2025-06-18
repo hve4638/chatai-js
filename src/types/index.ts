@@ -1,3 +1,22 @@
+export {
+    ChatRoleName,
+    ChatType,
+    type ChatContentPart,
+    type ChatMessages,
+    type ChatRolePart
+} from './request'
+export type {
+    ChatAIResult,
+    ChatAIResultRequest,
+    ChatAIResultResponse,
+} from './response'
+export {
+    FinishReason,
+} from './response'
+export type { 
+    ChatAIRequestOption
+} from './request-options'
+
 export type {
     RawJSONSchema,
     JSONObjectSchemaOptions,
@@ -8,13 +27,6 @@ export type {
 } from './response-format'
 
 export type {
-    ChatAIResult
-} from './response'
-export type {  
-    ChatAIRequestForm, RequestDebugOption
-} from './request'
-export {  
-    ChatRoleName, ChatType
-} from './request'
-
-export type { ChatAIResponse } from './fetch-response'
+    ChatAIRequest,
+    ChatAIResponse,
+} from './fetch-data'

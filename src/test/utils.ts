@@ -1,34 +1,34 @@
 import { ChatRoleName } from '@/types';
-import { ChatMessage } from '@/types/request'
+import { ChatMessages, ChatRolePart } from '@/types';
 
-export function assistant(textMessage:string):ChatMessage {
+export function assistant(textMessage:string):ChatRolePart {
     return {
         role: ChatRoleName.Assistant,
         content: [
             {
-                chatType: 'TEXT',
+                chatType: 'Text',
                 text: textMessage,
             },
         ]
     }
 }
-export function user(textMessage:string):ChatMessage {
+export function user(textMessage:string):ChatRolePart {
     return {
         role: ChatRoleName.User,
         content: [
             {
-                chatType: 'TEXT',
+                chatType: 'Text',
                 text: textMessage,
             },
         ]
     }
 }
-export function system(textMessage:string):ChatMessage {
+export function system(textMessage:string):ChatRolePart {
     return {
         role: ChatRoleName.System,
         content: [
             {
-                chatType: 'TEXT',
+                chatType: 'Text',
                 text: textMessage,
             },
         ]

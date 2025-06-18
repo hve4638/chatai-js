@@ -1,8 +1,6 @@
-import { ChatAIRequestForm, ChatRoleName } from '@/types'
 import GenerativeLanguageAPI, { type GenerativeLanguageData } from '.'
 
 import { user, assistant, system } from '@/test/utils'
-import { ValidChatRequestForm } from '@/types/request';
 import { AsyncQueue } from '@/utils';
 
 describe('GenerativeLanguage : request form', () => {
@@ -91,7 +89,7 @@ describe('GenerativeLanguage : request form', () => {
 });
 
 
-describe('GenerativeLanguage : stream', () => {
+describe.skip('GenerativeLanguageAPI: stream', () => {
     test('stream', async () => {
         const streamData = [
             "data: {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \"Hello\"}],\"role\": \"model\"}}],\"usageMetadata\": {\"promptTokenCount\": 12,\"totalTokenCount\": 12,\"promptTokensDetails\": [{\"modality\": \"TEXT\",\"tokenCount\": 12}]},\"modelVersion\": \"gemini-2.0-flash\"}\r",

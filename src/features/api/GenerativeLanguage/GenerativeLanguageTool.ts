@@ -1,11 +1,14 @@
-import { GenerationConfig, GenerativeLanguageBody, GenerativeLanguageMessages, GenerativeLanguageRequest, GenerativeLanguageResponse, HarmCategory, Roles, SafetyFilters, SafetySettings } from './types';
+import { GenerationConfig, GenerativeLanguageBody, GenerativeLanguageMessagePart, GenerativeLanguageMessages, GenerativeLanguageRequest, GenerativeLanguageResponse, HarmCategory, Roles, SafetyFilters, SafetySettings } from './types';
 
-import { ChatRoleName, ChatType, ChatAIRequestForm, ResponseFormat, ChatAIResponse } from '@/types';
+import { ResponseFormat, ChatAIResponse } from '@/types';
 import { ModelUnsupportError } from '@/errors';
-import { ChatMessage } from '@/types/request';
+import {
+    ChatMessages,
+    ChatType,
+    ChatRoleName,
+} from '@/types/request';
 import { JSONSchema } from '@/features/chatai';
-import { ChatAIRequestOption } from '../types';
-import { ChatAIResultResponse } from '@/types/response';
+import { ChatAIResultResponse, FinishReason } from '@/types/response';
 
 type GoogleResponseFormat = {
     response_mime_type: 'application/json';
@@ -17,9 +20,10 @@ class GenerativeLanguageTool {
         const contents: GenerativeLanguageMessages = GenerativeLanguageTool.parseMessages(request.messages);
         const generationConfig: GenerationConfig = {
             maxOutputTokens: request.max_tokens ?? 1024,
-            temperature: request.temperature ?? 1.0,
-            topP: request.top_p ?? 1.0,
         };
+
+        if (request.temperature) generationConfig.temperature = request.temperature;
+        if (request.top_p) generationConfig.topP = request.top_p;
 
         const responseFormat = GenerativeLanguageTool.parseResponseFormat(request.response_format);
         if (responseFormat.response_mime_type) {
@@ -37,7 +41,7 @@ class GenerativeLanguageTool {
         }
 
         const safetySettings = GenerativeLanguageTool.parseSafetySettings(request.safety_settings);
-        const body:GenerativeLanguageBody = {
+        const body: GenerativeLanguageBody = {
             contents: contents,
             generationConfig: generationConfig,
             safetySettings: safetySettings,
@@ -46,32 +50,45 @@ class GenerativeLanguageTool {
         return body;
     }
 
-    static parseMessages(messages: ChatMessage[]): GenerativeLanguageMessages {
+    static parseMessages(messages: ChatMessages): GenerativeLanguageMessages {
         const contents: GenerativeLanguageMessages = [];
 
         for (const request of messages) {
             const role = request.role;
-            const parts = request.content.map(content => {
-                if (content.chatType === ChatType.TEXT) {
+            const parts: GenerativeLanguageMessagePart[] = request.content.map(content => {
+                if (content.chatType === ChatType.Text) {
                     return {
                         text: content.text ?? ''
                     }
                 }
-                else if (content.chatType === ChatType.IMAGE_URL) {
-                    throw new ModelUnsupportError(`Gemini API does not support chatType : IMAGE_URL`);
-                }
-                else if (content.chatType === ChatType.IMAGE_BASE64) {
+                else if (content.chatType === ChatType.ImageBase64) {
                     return {
                         inline_data: {
                             'mime_type': `image/${content.extension ?? 'jpeg'}`,
-                            'data': content.image_url ?? ''
+                            'data': content.data ?? ''
                         }
-                    }
+                    } as GenerativeLanguageMessagePart;
+                }
+                else if (content.chatType === ChatType.PDFBase64) {
+                    return {
+                        inline_data: {
+                            'mime_type': 'application/pdf',
+                            'data': content.data
+                        }
+                    } as GenerativeLanguageMessagePart;
+                }
+                else if (content.chatType === ChatType.ImageURL) {
+                    throw new ModelUnsupportError(`Generative Language API does not support chatType: IMAGE_URL`);
+                }
+                else if (content.chatType === ChatType.PDFUrl) {
+                    throw new ModelUnsupportError(`Generative Language API does not support chatType: PDF_URL`);
                 }
                 else {
-                    throw new ModelUnsupportError(`Gemini API does not support chatType : ${content.chatType}`);
+                    const unhandledType = (content as any)?.chatType;
+                    throw new ModelUnsupportError(`Gemini API does not support chatType: ${unhandledType}`);
                 }
             });
+
             contents.push({
                 role: Roles[role] ?? Roles[ChatRoleName.User],
                 parts: parts,
@@ -80,7 +97,7 @@ class GenerativeLanguageTool {
         return contents;
     }
 
-    static parseResponseFormat(responseFormat?: ResponseFormat):GoogleResponseFormat {
+    static parseResponseFormat(responseFormat?: ResponseFormat): GoogleResponseFormat {
         if (!responseFormat) return { response_mime_type: null };
 
         if (responseFormat.type == 'json') {
@@ -113,9 +130,9 @@ class GenerativeLanguageTool {
         return { response_mime_type: null };
     }
 
-    static parseSafetySettings(safetySettings?: Partial<SafetyFilters>):SafetySettings {
+    static parseSafetySettings(safetySettings?: Partial<SafetyFilters>): SafetySettings {
         const safety = safetySettings ?? {};
-        
+
         return Object.entries(safety).map(([category, value]) => {
             return {
                 category: category as HarmCategory,
@@ -126,11 +143,10 @@ class GenerativeLanguageTool {
 
     static parseResponseOK(response: ChatAIResponse<GenerativeLanguageResponse>): ChatAIResultResponse {
         const data = response.data;
-        let warning: string | null;
 
         const thinkingContent: string[] = [];
         const content: string[] = [];
-        const candidate = data.candidates[0]
+        const candidate = data.candidates[0];
         if (candidate.content.parts) { // 추론 모델에서 MAX_TOKENS로 끝났을 때 parts가 없을 수 있음
             for (const part of candidate.content.parts) {
                 if (part.thought) {
@@ -146,12 +162,28 @@ class GenerativeLanguageTool {
             content.push('');
         }
 
-        const reason = candidate.finishReason;
-
-        if (reason == 'STOP') warning = null;
-        else if (reason == 'SAFETY') warning = 'blocked by SAFETY';
-        else if (reason == 'MAX_TOKENS') warning = 'max token limit';
-        else warning = `unhandle reason : ${reason}`;
+        let finishReason: FinishReason;
+        let warning: string | null = null;
+        switch (candidate.finishReason) {
+            case 'STOP':
+                finishReason = FinishReason.End;
+                break;
+            case 'MAX_TOKENS':
+                finishReason = FinishReason.MaxToken;
+                break;
+            case 'SAFETY':
+                finishReason = FinishReason.Blocked;
+                warning = 'blocked by SAFETY';
+                break;
+            case 'OTHER':
+                finishReason = FinishReason.Unknown;
+                warning = 'blocked by OTHER';
+                break;
+            default:
+                finishReason = FinishReason.Unknown;
+                warning = `unhandled reason: ${candidate.finishReason}`;
+                break;
+        }
 
         return {
             ok: true,
@@ -159,8 +191,8 @@ class GenerativeLanguageTool {
             http_status_text: response.message,
             raw: data,
 
-            thinking_content: thinkingContent,
             content: content,
+            thinking_content: thinkingContent,
             warning: warning,
 
             tokens: {
@@ -168,7 +200,7 @@ class GenerativeLanguageTool {
                 output: data.usageMetadata?.candidatesTokenCount ?? 0,
                 total: data.usageMetadata?.totalTokenCount ?? 0,
             },
-            finish_reason: reason,
+            finish_reason: finishReason,
         }
     }
 }

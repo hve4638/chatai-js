@@ -3,7 +3,7 @@ import axios, { AxiosError, AxiosResponse } from 'axios';
 import { EndpointAction } from '@/features/api';
 import type { BaseChatAIRequestAPI } from '@/features/api';
 
-import { ChatAIRequest } from '@/types/request';
+import { ChatAIRequest } from '@/types';
 import { ChatAIError } from '@/errors';
 import { ChatAIResultRequest } from '@/types/response';
 import { ChatAIResponse } from '@/types';
@@ -47,7 +47,7 @@ class APIProcess {
                                     code: error.code,
                                     status: error.status ?? 0,
                                     message: error.message,
-                                    data: error.response,
+                                    data: error.response?.data ?? {},
                                 }
                             ]
                         }

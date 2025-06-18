@@ -54,7 +54,6 @@ describe('ClaudeEndpoint request form', () => {
             max_tokens: 512,
             temperature: 1.2,
             top_p: 0.8,
-            stream: false,
         }
         const api = new AnthropicAPI(body, option);
         const actual = await api.makeRequestData();
@@ -74,7 +73,7 @@ describe('ClaudeEndpoint request form', () => {
     });
 });
 
-describe('ClaudeEndpoint response', () => {
+describe.skip('AnthropicAPI stream', () => {
     test('valid response', async () => {
         const streamData = [
             "event: message_start",

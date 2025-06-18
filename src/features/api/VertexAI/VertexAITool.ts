@@ -15,18 +15,19 @@ class VertexAITool {
             return {};
         }
     }
-
+    
     static parseAnthropicBody(request: AnthropicRequest, option: ChatAIRequestOption) {
         const { messages, system } = AnthropicAPITool.parseMessages(request.messages);
-
-        const body = {
+        
+        const body:any = {
             anthropic_version: 'vertex-2023-10-16',
             messages: messages,
-            system: system,
             max_tokens: request.max_tokens ?? 1024,
-            temperature: request.temperature ?? 1.0,
-            top_p: request.top_p ?? 1.0,
         };
+        if (system) body.system = system;
+        if (request.temperature) body.temperature = request.temperature;
+        if (request.top_p) body.top_p = request.top_p;
+
         return body;
     }
 

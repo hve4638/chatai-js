@@ -1,9 +1,5 @@
 import { Roles } from './roles';
 
-export type ChatCompletionsMessages = {
-    role: Roles;
-    content: ({ type: 'text', text: string } | { type: 'image_url', image_url: string })[];
-}[];
 export interface ChatCompletionsBody {
     model: string;
     messages: ChatCompletionsMessages;
@@ -16,6 +12,26 @@ export interface ChatCompletionsBody {
     }
     response_format?: ChatCompletionsResponseFormat;
 }
+
+export type ChatCompletionsMessages = {
+    role: Roles;
+    content: (
+        {
+            type: 'text';
+            text: string;
+        } | {
+            type: 'image_url';
+            image_url: string;
+        } | {
+            type: 'file';
+            file: {
+                filename: string;
+                file_data: string;
+            } | {
+                file_id: string;
+            }
+        })[];
+}[];
 
 export type ChatCompletionsResponseFormat = {
     type: 'json_object';

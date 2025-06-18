@@ -1,5 +1,5 @@
 import { AxiosResponse } from 'axios'
-import type { ChatAIRequestForm, ValidChatRequestForm, ChatAIRequest } from '@/types/request'
+import type { ChatAIRequest } from '@/types'
 import { ChatAIResultResponse } from '@/types/response'
 
 import { assertFieldExists, bracketFormat } from '@/utils'
@@ -80,7 +80,7 @@ class VertexAIAPI extends BaseChatAIRequestAPI<VertexAIData> {
 
     async makeRequestURL() {
         const url = bracketFormat(VertexAIAPI.DEFAULT_URL + VertexAIAPI.DEFAULT_PATH, {
-            location: VertexAIAPI.LOCATION,
+            location: this.body.location,
             projectid: this.body.auth.project_id,
             model: this.body.model,
             publisher: this.body.publisher,

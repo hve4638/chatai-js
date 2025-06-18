@@ -6,7 +6,7 @@ export interface AnthropicResponse {
         { type: 'text'; text: string; } |
         { type: 'thinking'; thinking: string; signature: string; }
     )[];
-    stop_reason: 'end_turn' | 'max_tokens' | 'unknown';
+    stop_reason: AnthropicStopReason;
     stop_sequence: unknown;
     usage: {
         input_tokens: number;
@@ -16,3 +16,11 @@ export interface AnthropicResponse {
         service_tier: string,
     }
 }
+
+export type AnthropicStopReason = (
+    'end_turn' |
+    'max_tokens' |
+    'stop_sequence' |
+    'tool_use' |
+    'pause_turn'
+)

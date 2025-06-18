@@ -1,49 +1,85 @@
-import { ChatType, ChatRoleName } from "../../types";
-import { Content } from "../../types/request";
-import { guessImageExtFromBase64 } from "../../utils";
+import * as fs from 'fs';
+import * as path from 'path';
+import { ChatType, ChatRoleName } from '@/types';
+import { ChatContentPart } from '@/types';
+import { guessImageExtFromBase64 } from "@/utils";
 
 export const Chat = {
-    Text(text:string) {
+    Text(text: string) {
         return {
-            chatType: ChatType.TEXT,
+            chatType: ChatType.Text,
             text: text
         };
     },
 
     Image: {
-        URL : (url:string) => {
+        URL(url: string): ChatContentPart {
             return {
-                chatType: ChatType.IMAGE_URL,
-                image_url: url
+                chatType: ChatType.ImageURL,
+                url: url
             };
         },
-        Base64 : (base64:string) => {
+        Base64(base64: string): ChatContentPart {
             return {
-                chatType: ChatType.IMAGE_BASE64,
-                image_url: base64,
-                extension : guessImageExtFromBase64(base64),
+                chatType: ChatType.ImageBase64,
+                data: base64,
+                extension: guessImageExtFromBase64(base64),
                 //image: `data:image/jpeg;base64,${base64}`
+            };
+        },
+        From(target: string): ChatContentPart {
+            const base64 = fs.readFileSync(target, 'base64');
+            return {
+                chatType: ChatType.ImageBase64,
+                data: base64,
+                extension: guessImageExtFromBase64(base64),
+            };
+        }
+    },
+
+    PDF: {
+        URL(url: string): ChatContentPart {
+            return {
+                chatType: ChatType.PDFUrl,
+                url: url
+            };
+        },
+        Base64(filename:string, base64: string): ChatContentPart {
+            return {
+                chatType: ChatType.PDFBase64,
+                filename: filename,
+                data: base64
+            };
+        },
+        From(target: string): ChatContentPart {
+            const base64 = fs.readFileSync(target, 'base64');
+            const filename = path.basename(target);
+
+            return {
+                chatType: ChatType.PDFBase64,
+                filename: filename,
+                data: base64
             };
         }
     }
 } as const;
 
 export const ChatRole = {
-    User(...content:Content[]) {
+    User(...content: ChatContentPart[]) {
         return {
             role: ChatRoleName.User,
             content: content
         };
     },
 
-    Assistant(...content:Content[]) {
+    Assistant(...content: ChatContentPart[]) {
         return {
             role: ChatRoleName.Assistant,
             content: content
         };
     },
 
-    System(...content:Content[]) {
+    System(...content: ChatContentPart[]) {
         return {
             role: ChatRoleName.System,
             content: content

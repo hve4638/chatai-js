@@ -1,4 +1,4 @@
-import { ChatMessage } from '@/types/request';
+import { ChatMessages } from './request';
 
 export interface BaseRequest {
     /** 미지정시 기본 URL 사용 */
@@ -7,7 +7,7 @@ export interface BaseRequest {
     endpoint_path?: string;
 
     model: string;
-    messages: ChatMessage[];
+    messages: ChatMessages;
 
     temperature?: number;
     max_tokens?: number;
@@ -17,7 +17,6 @@ export interface APIKeyAuth {
     auth: {
         api_key: string;
     }
-
 }
 
 export interface VertexAIAuth {

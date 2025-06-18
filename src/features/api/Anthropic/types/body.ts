@@ -17,7 +17,11 @@ export type AnthropicBody = {
 
 export type AnthropicMessages = {
     role: Roles;
-    content: ({
+    content: AnthropicMessageContent[];
+}[];
+
+export type AnthropicMessageContent = (
+    {
         type: 'text';
         text: string;
     } | {
@@ -26,6 +30,25 @@ export type AnthropicMessages = {
             type: 'base64';
             media_type: string;
             data: string;
+        } | {
+            type: 'url';
+            url: string;
+        } | {
+            type: 'file';
+            file_id: string;
         };
-    })[];
-}[];
+    } | {
+        type: 'document';
+        source: {
+            type: 'url';
+            url: string;
+        } | {
+            type: 'base64',
+            media_type: 'application/pdf',
+            data: string
+        } | {
+            type: 'file',
+            file_id: string;
+        }
+    }
+);

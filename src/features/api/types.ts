@@ -1,4 +1,4 @@
-import { ChatMessage } from '@/types/request';
+import { ChatMessages } from '@/types/request';
 
 export type ChatAIRequestOption = {
     stream: boolean;
@@ -18,7 +18,7 @@ export interface BaseAPIBody {
     endpoint_path? : string;
 
     model : string;
-    messages : ChatMessage[];
+    messages : ChatMessages;
 
     temperature? : number;
     max_tokens? : number;

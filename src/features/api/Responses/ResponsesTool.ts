@@ -1,23 +1,24 @@
-import { ChatMessage, ChatRoleName, ChatType } from '@/types/request';
+import { ChatMessages, ChatRoleName, ChatType } from '@/types';
 import { ChatAIRequestOption } from '../types';
 import { ResponsesBody, ResponsesRequest, ResponsesMessages, Roles, ResponsesResponse } from './types';
 import { ChatAIResponse } from '@/types';
-import { ChatAIResultResponse } from '@/types/response';
+import { ChatAIResultResponse, FinishReason } from '@/types/response';
 
 class ResponsesTool {
-    static parseBody(data: ResponsesRequest, option: ChatAIRequestOption): ResponsesBody {
-        const messages = this.parseMessages(data.messages);
+    static parseBody(request: ResponsesRequest, option: ChatAIRequestOption): ResponsesBody {
+        const messages = this.parseMessages(request.messages);
         const body: ResponsesBody = {
-            model: data.model,
-            top_p: data.top_p ?? 1.0,
-            temperature: data.temperature ?? 1.0,
-            max_output_tokens: data.max_tokens ?? 1024,
+            model: request.model,
             input: messages,
+            max_output_tokens: request.max_tokens ?? 1024,
         };
 
-        if (data.thinking_effort) {
+        if (request.temperature) body.temperature = request.temperature;
+        if (request.top_p) body.top_p = request.top_p;
+
+        if (request.thinking_effort) {
             body.reasoning ??= {};
-            body.reasoning.effort = data.thinking_effort;
+            body.reasoning.effort = request.thinking_effort;
         }
         // @TODO: 추론 요약 옵션이 작동하지 않는 문제
         // if (data.thinking_summary) {
@@ -27,53 +28,41 @@ class ResponsesTool {
         return body;
     }
 
-    static parseMessages(messages: ChatMessage[]): ResponsesMessages {
+    static parseMessages(messages: ChatMessages): ResponsesMessages {
         const result: ResponsesMessages = [];
         for (const m of messages) {
             if (m.content.length === 0) continue;
-            if (m.content.length === 1) {
-                result.push({
-                    role: Roles[m.role] ?? Roles[ChatRoleName.User],
-                    content: [
-                        {
-                            type: 'input_text',
-                            text: m.content[0].text ?? '',
-                        }
-                    ]
-                });
-            }
-            else {
-                const chatBlock = {
-                    role: Roles[m.role] ?? Roles[ChatRoleName.User],
-                    content: [] as any[]
-                };
-                for (const chat of m.content) {
-                    if (chat.chatType === ChatType.TEXT) {
-                        chatBlock.content.push({
-                            type: 'input_text',
-                            text: chat.text
-                        });
-                    }
-                    else if (chat.chatType === ChatType.IMAGE_URL) {
-                        chatBlock.content.push({
-                            type: 'image_url',
-                            image_url: {
-                                url: chat.image_url
-                            }
-                        });
-                    }
-                    else if (chat.chatType === ChatType.IMAGE_BASE64) {
-                        chatBlock.content.push({
-                            type: 'image_url',
-                            image_url: {
-                                url: `data:image/${chat.extension ?? 'jpeg'};base64,${chat.image_url}`
-                            }
-                        });
-                    }
+            
+            const chatBlock = {
+                role: Roles[m.role] ?? Roles[ChatRoleName.User],
+                content: [] as any[]
+            };
+            for (const chat of m.content) {
+                if (chat.chatType === ChatType.Text) {
+                    chatBlock.content.push({
+                        type: 'input_text',
+                        text: chat.text
+                    });
                 }
-
-                result.push(chatBlock);
+                else if (chat.chatType === ChatType.ImageURL) {
+                    chatBlock.content.push({
+                        type: 'image_url',
+                        image_url: {
+                            url: chat.url
+                        }
+                    });
+                }
+                else if (chat.chatType === ChatType.ImageBase64) {
+                    chatBlock.content.push({
+                        type: 'image_url',
+                        image_url: {
+                            url: `data:image/${chat.extension ?? 'jpeg'};base64,${chat.data}`
+                        }
+                    });
+                }
             }
+
+            result.push(chatBlock);
         }
 
         return result;
@@ -97,6 +86,14 @@ class ResponsesTool {
         }
         if (content.length === 0) {
             content.push('');
+        }
+
+        let finishReason: FinishReason;
+        if (data.incomplete_details) {
+            finishReason = FinishReason.Unknown;
+        }
+        else {
+            finishReason = FinishReason.End;
         }
 
         return {
