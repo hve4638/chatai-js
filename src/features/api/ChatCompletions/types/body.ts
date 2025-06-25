@@ -1,15 +1,25 @@
 import { Roles } from './roles';
 
 export interface ChatCompletionsBody {
-    model: string;
     messages: ChatCompletionsMessages;
+    model: string;
+
+    /** @deprecated */
     max_tokens?: number;
+    max_completion_tokens?: number;
     temperature?: number;
     top_p?: number;
+
+    audio?: unknown;
+    frequency_penalty?: number;
+    logit_bias?: unknown;
+    logprobs?: boolean;
+    
     stream?: boolean;
     stream_options?: {
         include_usage?: boolean;
     }
+    reasoning_effort?: 'low' | 'medium' | 'high';
     response_format?: ChatCompletionsResponseFormat;
 }
 

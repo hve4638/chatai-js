@@ -11,9 +11,10 @@ class ChatCompletionsTool {
         const body: ChatCompletionsBody = {
             model: request.model,
             messages: messages,
-            max_tokens: request.max_tokens ?? 1024,
+            max_completion_tokens: request.max_tokens ?? 1024,
         }
 
+        if (request.thinking_effort) body.reasoning_effort = request.thinking_effort;
         if (request.temperature) body.temperature = request.temperature;
         if (request.top_p) body.top_p = request.top_p;
         if (option.stream) {

@@ -111,6 +111,34 @@ const hasApiKey = !!process.env['OPENAI_KEY'];
         expect(answer).toContain('5'); // 10/2
     });
 
+    test('fetch: thinking', async () => {
+        const result = await ChatAI.requestChatCompletion({
+            messages: [
+                ChatRole.User(
+                    Chat.Text("광합성과 성장을 비유해줘")
+                )
+            ],
+            model: 'o3-mini',
+            auth: {
+                api_key: apiKey
+            },
+            // max_tokens: 2048,
+            // temperature: 0.8,
+            thinking_effort: 'low',
+        });
+
+        const { request, response } = result;
+        expect(request.url).toEqual('https://api.openai.com/v1/chat/completions');
+        expect(request.headers).toEqual({
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer SECRET`
+        });
+        expect(response.ok).toBe(true);
+        expect(response.http_status).toBe(200);
+        expect(response.finish_reason).toBe(FinishReason.End);
+        expect(response.content[0].trim().toLowerCase().replaceAll('.', '')).toEqual('hello');
+    });
+
     // test('fetch : stream', async () => {
     //     const [stream, resultPromise] = await chatAI.stream({
     //         message: [
