@@ -5,7 +5,7 @@ import { AsyncQueue } from '@/utils';
 
 describe('GenerativeLanguage : request form', () => {
     const form: GenerativeLanguageData = {
-        endpoint_url: 'example.com',
+        url: 'example.com',
         
         model: 'model-name',
         auth : {
@@ -30,7 +30,7 @@ describe('GenerativeLanguage : request form', () => {
         const actual = await api.makeRequestURL();
 
         // URL에 API키와 모델명이 포함됨        
-        const expected = 'example.com/v1beta/models/model-name:generateContent?key=api-key';
+        const expected = 'example.com?key=api-key';
         expect(actual).toBe(expected);
     });
     test('valid body', async () => {

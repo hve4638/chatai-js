@@ -9,8 +9,8 @@ import { ResponsesData } from './types'
 import ResponsesTool from './ResponsesTool'
 
 class ResponsesAPI extends BaseChatAIRequestAPI<ResponsesData> {
-    static readonly DEFAULT_URL = 'https://api.openai.com';
-    static readonly DEFAULT_PATH = '/v1/responses';
+    static readonly DEFAULT_URL = 'https://api.openai.com/v1/responses';
+    // static readonly DEFAULT_PATH = '/v1/responses';
 
     constructor(body: ResponsesData, option: ChatAIRequestOption) {
         super(body, option);
@@ -25,9 +25,7 @@ class ResponsesAPI extends BaseChatAIRequestAPI<ResponsesData> {
     }
 
     async makeRequestURL() {
-        const domain = this.body.endpoint_url ?? ResponsesAPI.DEFAULT_URL;
-        const path = this.body.endpoint_path ?? ResponsesAPI.DEFAULT_PATH;
-        return domain + path;
+        return this.body.url ?? ResponsesAPI.DEFAULT_URL;
     }
     async makeRequestConfig(): Promise<AxiosRequestConfig<any>> {
         assertFieldExists(this.body.auth.api_key, 'secret.api_key');

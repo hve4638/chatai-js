@@ -20,8 +20,8 @@ import AnthropicAPITool from './AnthropicAPITool';
 import { ChatAIResponse, ChatAIRequestOption } from '@/types';
 
 class AnthropicAPI extends BaseChatAIRequestAPI<AnthropicData> {
-    static readonly DEFAULT_URL = 'https://api.anthropic.com';
-    static readonly DEFAULT_PATH = '/v1/messages';
+    static readonly DEFAULT_URL = 'https://api.anthropic.com/v1/messages';
+    // static readonly DEFAULT_PATH = '';
 
     constructor(body: AnthropicData, option: ChatAIRequestOption) {
         super(body, option);
@@ -36,9 +36,7 @@ class AnthropicAPI extends BaseChatAIRequestAPI<AnthropicData> {
     }
 
     async makeRequestURL() {
-        const domain = this.body.endpoint_url ?? AnthropicAPI.DEFAULT_URL;
-        const path = this.body.endpoint_path ?? AnthropicAPI.DEFAULT_PATH;
-        return domain + path;
+        return this.body.url ?? AnthropicAPI.DEFAULT_URL;
     }
 
     async makeRequestConfig():Promise<AxiosRequestConfig<any>> {

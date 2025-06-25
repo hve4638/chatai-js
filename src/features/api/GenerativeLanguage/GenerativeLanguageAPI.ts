@@ -18,9 +18,10 @@ import GenerativeLanguageTool from './GenerativeLanguageTool';
 import { ChatAIResponse } from '@/types';
 
 class GenerativeLanguageAPI extends BaseChatAIRequestAPI<GenerativeLanguageData> {
-    static readonly DEFAULT_BASE_URL = 'https://generativelanguage.googleapis.com';
-    static readonly ENDPOINT_URL = '/v1beta/models/{{model}}:generateContent?key={{api_key}}';
-    static readonly STREAM_ENDPOINT_URL = '/v1beta/models/{{model}}:streamGenerateContent?alt=sse&key={{api_key}}';
+    static readonly DEFAULT_URL = 'https://generativelanguage.googleapis.com/v1beta/models/{{model}}';
+    // static readonly DEFAULT_URL_STREAM = 'https://generativelanguage.googleapis.com/v1beta/models/{{model}}:streamGenerateContent?alt=sse&key={{api_key}}';
+    static readonly URL_QUERY = '?key={{api_key}}';
+    static readonly URL_QUERY_STREAM = '?alt=sse&key={{api_key}}';
 
     constructor(body: GenerativeLanguageData, option: ChatAIRequestOption) {
         super(body, option);
@@ -35,24 +36,33 @@ class GenerativeLanguageAPI extends BaseChatAIRequestAPI<GenerativeLanguageData>
     }
 
     async makeRequestURL() {
-        const baseURL = this.body.endpoint_url ?? GenerativeLanguageAPI.DEFAULT_BASE_URL;
-        if (this.body.endpoint_path) {
-            console.warn('GenerativeLanguageAPI : endpoint_path does not supported');
+        let baseURL: string;
+
+        if (this.body.url) {
+            baseURL = this.body.url;
         }
+        else {
+            if (this.option.stream) {
+                baseURL = GenerativeLanguageAPI.DEFAULT_URL + ':streamGenerateContent';
+            }
+            else {
+                baseURL = GenerativeLanguageAPI.DEFAULT_URL + ':generateContent';
+            }
+        }
+
         let url: string;
         if (this.option.stream) {
-            url = baseURL + bracketFormat(GenerativeLanguageAPI.STREAM_ENDPOINT_URL, {
+            url = bracketFormat(baseURL + GenerativeLanguageAPI.URL_QUERY_STREAM, {
                 api_key: this.body.auth.api_key,
                 model: this.body.model,
             });
         }
         else {
-            url = baseURL + bracketFormat(GenerativeLanguageAPI.ENDPOINT_URL, {
+            url = bracketFormat(baseURL + GenerativeLanguageAPI.URL_QUERY, {
                 api_key: this.body.auth.api_key,
                 model: this.body.model,
             });
         }
-
         return url;
     }
     async makeRequestConfig(): Promise<AxiosRequestConfig<any>> {
@@ -78,7 +88,7 @@ class GenerativeLanguageAPI extends BaseChatAIRequestAPI<GenerativeLanguageData>
         throw new Error('Not implemented');
     }
 
-    async parseStreamData():Promise<string | undefined> {
+    async parseStreamData(): Promise<string | undefined> {
         throw new Error('Not implemented');
     }
 

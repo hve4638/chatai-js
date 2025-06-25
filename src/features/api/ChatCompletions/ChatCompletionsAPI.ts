@@ -11,8 +11,7 @@ import ChatCompletionsTool from './ChatCompletionsTool';
 import { ChatAIResponse } from '@/types';
 
 class ChatCompletionsAPI extends BaseChatAIRequestAPI<ChatCompletionsData> {
-    static readonly DEFAULT_BASE_URL = 'https://api.openai.com';
-    static readonly ENDPOINT_URL = '/v1/chat/completions';
+    static readonly DEFAULT_BASE_URL = 'https://api.openai.com/v1/chat/completions';
     static readonly DEFAULT_OPTIONS = {
         TOP_P: 1.0,
         TEMPERATURE: 1.0,
@@ -23,9 +22,6 @@ class ChatCompletionsAPI extends BaseChatAIRequestAPI<ChatCompletionsData> {
         super(body, option);
     }
 
-    get baseURLDomain() { return ChatCompletionsAPI.DEFAULT_BASE_URL; }
-    get baseURLPath() { return ChatCompletionsAPI.ENDPOINT_URL; }
-
     mask() {
         const copiedBody = structuredClone(this.body);
         this.maskField(copiedBody.auth)
@@ -35,9 +31,7 @@ class ChatCompletionsAPI extends BaseChatAIRequestAPI<ChatCompletionsData> {
     }
 
     async makeRequestURL() {
-        const domain = this.body.endpoint_url ?? this.baseURLDomain;
-        const path = this.body.endpoint_path ?? this.baseURLPath;
-        return domain + path;
+        return this.body.url ?? ChatCompletionsAPI.DEFAULT_BASE_URL;
     }
     async makeRequestConfig(): Promise<AxiosRequestConfig<any>> {
         assertFieldExists(this.body.auth.api_key, 'secret.api_key');

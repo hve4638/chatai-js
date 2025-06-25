@@ -4,7 +4,7 @@ import { AsyncQueue } from '@/utils';
 
 describe('ClaudeEndpoint request form', () => {
     const body: AnthropicData = {
-        endpoint_url: 'example.com',
+        url: 'example.com/v1/messages',
         
         model: 'model-name',
         auth: {

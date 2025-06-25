@@ -6,7 +6,7 @@ import { AsyncQueue } from '@/utils';
 
 describe('ChatCompletions : transform ChatAIRequestForm', () => {
     const body: ChatCompletionsData = {
-        endpoint_url: 'example.com',
+        url: 'example.com/v1/chat/completions',
 
         model: 'model-name',
         auth: {

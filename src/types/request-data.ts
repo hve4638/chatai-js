@@ -2,9 +2,7 @@ import { ChatMessages } from './request';
 
 export interface BaseRequest {
     /** 미지정시 기본 URL 사용 */
-    endpoint_url?: string;
-    /** 미지정시 기본 URL Path 사용 */
-    endpoint_path?: string;
+    url?: string;
 
     model: string;
     messages: ChatMessages;
