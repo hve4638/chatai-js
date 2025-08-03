@@ -7,10 +7,48 @@ const hasApiKey = !!process.env['OPENAI_KEY'];
 // OpenAI 모델 목록 : https://platform.openai.com/docs/models
 (hasApiKey ? describe : describe.skip)('GPT API test', () => {
     let apiKey: string;
-    let chatAI: ChatAI;
 
     beforeAll(() => {
         apiKey = process.env['OPENAI_KEY'] as string;
+    });
+
+    test('preview request', async () => {
+        const result = await ChatAI.previewRequest.chatCompletion({
+            messages: [
+                ChatRole.User(
+                    Chat.Text("Say just 'hello'. Do not answer anything else.")
+                )
+            ],
+            model: 'gpt-4o-mini-2024-07-18',
+            auth: {
+                api_key: apiKey
+            },
+            max_tokens: 10,
+            temperature: 0.1,
+        });
+
+        const { request } = result;
+        expect(request.url).toEqual('https://api.openai.com/v1/chat/completions');
+        expect(request.headers).toEqual({
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer SECRET`
+        });
+        expect(request.data).toEqual({
+            'max_completion_tokens': 10,
+            'messages': [
+                {
+                    'content': [
+                        {
+                            'text': "Say just 'hello'. Do not answer anything else.",
+                            'type': 'text',
+                        },
+                    ],
+                    'role': 'user',
+                },
+            ],
+            'model': 'gpt-4o-mini-2024-07-18',
+            'temperature': 0.1,
+        });
     });
 
     test('fetch: request', async () => {

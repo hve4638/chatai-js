@@ -35,7 +35,7 @@ const hasApiKey = !!process.env['OPENAI_KEY'];
             result,
             debug
         } = streamResult;
-        const resulted = await result
+        const resulted = await result;
         console.log(resulted);
         const {
             rawStream,

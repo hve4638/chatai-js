@@ -45,7 +45,7 @@ class ChatAITool {
                 return JSON.parse(fragment.trim()) as T;
             }
             catch (e) {
-                console.error('Incomplete stream data : ', fragment);
+                // console.error('Incomplete stream data : ', fragment);
                 continue;
             }
         }

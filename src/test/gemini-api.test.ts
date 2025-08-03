@@ -12,6 +12,45 @@ const hasApiKey = !!process.env['GEMINI_KEY'];
         apiKey = process.env['GEMINI_KEY'] as string;
     });
 
+    test('preview: request', async () => {
+        const result = await ChatAI.previewRequest.generativeLanguage({
+            messages: [
+                ChatRole.User(
+                    Chat.Text("Say just 'hello'. Do not answer anything else.")
+                )
+            ],
+            model: 'gemini-2.0-flash-lite',
+            auth: {
+                api_key: apiKey
+            },
+            max_tokens: 10,
+            temperature: 0.1,
+        });
+
+        const { request } = result;
+        expect(request.url).toEqual('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=SECRET');
+        expect(request.headers).toEqual({
+            'Content-Type': 'application/json',
+        });
+        expect(request.data).toEqual({
+            'contents': [
+                {
+                    'parts': [
+                        {
+                            'text': "Say just 'hello'. Do not answer anything else.",
+                        },
+                    ],
+                    'role': 'USER',
+                },
+            ],
+            'generationConfig': {
+                'maxOutputTokens': 10,
+                'temperature': 0.1,
+            },
+            'safetySettings': [],
+        });
+    });
+
     test('fetch: request', async () => {
         const result = await ChatAI.requestGenerativeLanguage({
             messages: [
@@ -137,7 +176,7 @@ const hasApiKey = !!process.env['GEMINI_KEY'];
                 }, {}),
             )
         });
-        
+
         const { request, response } = result;
         expect(request.url).toEqual('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=SECRET');
         expect(request.headers).toEqual({
@@ -146,13 +185,13 @@ const hasApiKey = !!process.env['GEMINI_KEY'];
         expect(response.ok).toBe(true);
         expect(response.http_status).toBe(200);
         expect(response.finish_reason).toBe(FinishReason.End);
-        
+
         const data = JSON.parse(response.content[0]);
         const { user_message, response: aiResponse } = data;
         expect(user_message).toEqual(uesrMessage);
         expect(aiResponse.trim().toLowerCase().replaceAll('.', '')).toEqual('hello');
     });
-    
+
     test('fetch: stream', async () => {
         const streamResult = await ChatAI.stream.generativeLanguage({
             messages: [
@@ -167,15 +206,15 @@ const hasApiKey = !!process.env['GEMINI_KEY'];
             max_tokens: 10,
             temperature: 0.1,
         });
-        
+
         const {
             messages
         } = streamResult;
         const {
             request, response
         } = await streamResult.result;
-        
-        const ls:string[] = [];
+
+        const ls: string[] = [];
         for await (const m of messages) {
             ls.push(m);
         }

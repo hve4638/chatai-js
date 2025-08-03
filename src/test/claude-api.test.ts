@@ -11,6 +11,46 @@ const hasApiKey = !!process.env['CLAUDE_KEY'];
         apiKey = process.env['CLAUDE_KEY'] as string;
     });
 
+    test('preview: request', async () => {
+        const result = await ChatAI.previewRequest.anthropic({
+            messages: [
+                ChatRole.User(
+                    Chat.Text("Say just 'hello'. Do not answer anything else.")
+                )
+            ],
+            model: 'claude-3-5-haiku-20241022',
+            auth: {
+                api_key: apiKey
+            },
+            max_tokens: 10,
+            temperature: 0.1,
+        });
+
+        const { request } = result;
+        expect(request.url).toEqual('https://api.anthropic.com/v1/messages');
+        expect(request.headers).toEqual({
+            'Content-Type': 'application/json',
+            'x-api-key': 'SECRET',
+            'anthropic-version': '2023-06-01'
+        });
+        expect(request.data).toEqual({
+            'max_tokens': 10,
+            'messages': [
+                {
+                    'content': [
+                        {
+                            'text': "Say just 'hello'. Do not answer anything else.",
+                            'type': 'text',
+                        },
+                    ],
+                    'role': 'user',
+                },
+            ],
+            'model': 'claude-3-5-haiku-20241022',
+            'temperature': 0.1,
+        });
+    });
+
     test('fetch: request', async () => {
         const result = await ChatAI.requestAnthropic({
             messages: [
@@ -131,8 +171,8 @@ const hasApiKey = !!process.env['CLAUDE_KEY'];
         const {
             request, response
         } = await streamResult.result;
-        
-        const ls:string[] = [];
+
+        const ls: string[] = [];
         for await (const m of messages) {
             ls.push(m);
         }

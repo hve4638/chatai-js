@@ -72,6 +72,33 @@ class ChatAI {
             return await this.#stream(api, debug);
         },
     }
+    static readonly previewRequest = {
+        chatCompletion: async (data: ChatCompletionsData, debug: RequestDebugOption = {}) => {
+            const api = new ChatCompletionsAPI(data, { stream: false });
+
+            return await this.#previewRequest(api, debug);
+        },
+        responses: async (data: ResponsesData, debug: RequestDebugOption = {}) => {
+            const api = new ResponsesAPI(data, { stream: false });
+
+            return await this.#previewRequest(api, debug);
+        },
+        anthropic: async (data: AnthropicData, debug: RequestDebugOption = {}) => {
+            const api = new AnthropicAPI(data, { stream: false });
+
+            return await this.#previewRequest(api, debug) as ChatAIResult;
+        },
+        generativeLanguage: async (data: GenerativeLanguageData, debug: RequestDebugOption = {}) => {
+            const api = new GenerativeLanguageAPI(data, { stream: false });
+
+            return await this.#previewRequest(api, debug) as ChatAIResult;
+        },
+        requestVertexAI: async (data: VertexAIData, debug: RequestDebugOption = {}) => {
+            const api = new VertexAIAPI(data, { stream: false });
+
+            return await this.#previewRequest(api, debug) as ChatAIResult;
+        }
+    }
 
     /**
      * OpenAI의 AI 요청 Endpoint
@@ -203,6 +230,31 @@ class ChatAI {
             messages: messageGenerator(messageStream),
             result: resultResponse.then(chatAIResponse => resolveResponse(chatAIResponse)),
             debug: debugResult,
+        };
+    }
+
+    static async #previewRequest(api: BaseChatAIRequestAPI, debug: RequestDebugOption = {}): Promise<ChatAIResult> {
+        const requestResult = await APIProcess.makeMaskedRequest(api);
+        const responseResult: ChatAIResultResponse = {
+            ok: false,
+            http_status: -1,
+            finish_reason: 'end',
+            content: [],
+            http_status_text: 'preview',
+            raw: undefined,
+            thinking_content: [],
+            warning: null,
+            tokens: {
+                input: 0,
+                output: 0,
+                total: 0,
+                detail: undefined
+            }
+        }
+
+        return {
+            request: requestResult,
+            response: responseResult,
         };
     }
 }
