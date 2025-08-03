@@ -1,7 +1,6 @@
 import 'dotenv/config';
 
-import { ChatAI, Chat, ChatRole } from '@/.'
-import { FinishReason } from '@/types';
+import { ChatAI, Chat, ChatRole, ResponseFormat, JSONSchema, FinishReason } from '@/.'
 
 const hasApiKey = !!process.env['GEMINI_KEY'];
 
@@ -31,7 +30,7 @@ const hasApiKey = !!process.env['GEMINI_KEY'];
         const { request, response } = result;
         expect(request.url).toEqual('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=SECRET');
         expect(request.headers).toEqual({
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
         });
         expect(response.ok).toBe(true);
         expect(response.http_status).toBe(200);
@@ -40,7 +39,7 @@ const hasApiKey = !!process.env['GEMINI_KEY'];
     });
 
     test('fetch: vision', async () => {
-        const target = './.test/target.jpg';
+        const target = './.test/target.png';
 
         const result = await ChatAI.requestGenerativeLanguage({
             messages: [
@@ -106,38 +105,90 @@ const hasApiKey = !!process.env['GEMINI_KEY'];
         expect(answer).toContain('16'); // 4*4
         expect(answer).toContain('5'); // 10/2
     });
-    // test('fetch : stream', async ()=>{
-    //     const [stream, resultPromise] = await chatAI.stream({
-    //         message : [
-    //             ChatRole.User(
-    //                 Chat.Text("Say just 'hello'. Do not answer anything else.")
-    //             )
-    //         ],
-    //         provider : KnownProvider.Google,
-    //         model_name : 'gemini-2.0-flash',
-    //         secret : {
-    //             api_key : apiKey
-    //         },
-    //         max_tokens : 128,
-    //         temperature : 1.0,
-    //     }, { rawStream: true });
 
+    test('fetch: structed output', async () => {
+        const uesrMessage = "Say just 'hello'."
 
-    //     let messageList:string[] = [];
-    //     for await (const fragment of stream) {
-    //         messageList.push(fragment);
-    //     }
+        const result = await ChatAI.requestGenerativeLanguage({
+            messages: [
+                ChatRole.User(
+                    Chat.Text(uesrMessage)
+                )
+            ],
+            model: 'gemini-2.5-flash',
+            auth: {
+                api_key: apiKey
+            },
+            max_tokens: 128,
+            temperature: 0.1,
+            thinking_tokens: 0,
 
-    //     let message:string = messageList.join('');
-    //     const result = await resultPromise;
-    //     const response = result.response;
+            response_format: ResponseFormat.JSONSchema(
+                JSONSchema.Object({
+                    user_message: JSONSchema.String({
+                        description: 'The user message that was sent to the AI.'
+                    }),
+                    user_intent: JSONSchema.String({
+                        description: 'The intent of the user message, such as greeting, question, etc.'
+                    }),
+                    response: JSONSchema.String({
+                        description: "Responding to a user's question"
+                    }),
+                }, {}),
+            )
+        });
+        
+        const { request, response } = result;
+        expect(request.url).toEqual('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=SECRET');
+        expect(request.headers).toEqual({
+            'Content-Type': 'application/json'
+        });
+        expect(response.ok).toBe(true);
+        expect(response.http_status).toBe(200);
+        expect(response.finish_reason).toBe(FinishReason.End);
+        
+        const data = JSON.parse(response.content[0]);
+        const { user_message, response: aiResponse } = data;
+        expect(user_message).toEqual(uesrMessage);
+        expect(aiResponse.trim().toLowerCase().replaceAll('.', '')).toEqual('hello');
+    });
+    
+    test('fetch: stream', async () => {
+        const streamResult = await ChatAI.stream.generativeLanguage({
+            messages: [
+                ChatRole.User(
+                    Chat.Text("Say just 'hello'. Do not answer anything else.")
+                )
+            ],
+            model: 'gemini-2.0-flash-lite',
+            auth: {
+                api_key: apiKey
+            },
+            max_tokens: 10,
+            temperature: 0.1,
+        });
+        
+        const {
+            messages
+        } = streamResult;
+        const {
+            request, response
+        } = await streamResult.result;
+        
+        const ls:string[] = [];
+        for await (const m of messages) {
+            ls.push(m);
+        }
+        const streamMessage = ls.join('');
 
-    //     // 스트리밍 텍스트와 결과 텍스트가 동일한지 확인
-    //     expect(response.content[0]).toEqual(message);
-
-    //     expect(response.ok).toBe(true);
-    //     expect(response.http_status).toBe(200);
-    //     expect(response.finish_reason).toBe('STOP');
-    //     expect(response.content[0].trim().toLowerCase().replaceAll('.', '')).toEqual('hello')
-    // });
+        expect(request.url).toEqual('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:streamGenerateContent?alt=sse&key=SECRET');
+        expect(request.headers).toEqual({
+            'Content-Type': 'application/json',
+        });
+        expect(response.ok).toBe(true);
+        expect(response.http_status).toBe(200);
+        expect(response.finish_reason).toBe(FinishReason.End);
+        expect(response.content[0].trim()).toEqual('hello')
+        expect(response.content[0]).toEqual(streamMessage);
+    });
 });

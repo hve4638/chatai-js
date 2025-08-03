@@ -2,6 +2,7 @@ import GenerativeLanguageAPI, { type GenerativeLanguageData } from '.'
 
 import { user, assistant, system } from '@/test/utils'
 import { AsyncQueue } from '@/utils';
+import Channel from '@hve/channel';
 
 describe('GenerativeLanguage : request form', () => {
     const form: GenerativeLanguageData = {
@@ -89,7 +90,7 @@ describe('GenerativeLanguage : request form', () => {
 });
 
 
-describe.skip('GenerativeLanguageAPI: stream', () => {
+describe('GenerativeLanguageAPI: stream', () => {
     test('stream', async () => {
         const streamData = [
             "data: {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \"Hello\"}],\"role\": \"model\"}}],\"usageMetadata\": {\"promptTokenCount\": 12,\"totalTokenCount\": 12,\"promptTokensDetails\": [{\"modality\": \"TEXT\",\"tokenCount\": 12}]},\"modelVersion\": \"gemini-2.0-flash\"}\r",
@@ -99,13 +100,14 @@ describe.skip('GenerativeLanguageAPI: stream', () => {
             "\r",
             "",
         ];
-        const streamQueue = new AsyncQueue<string>();
-        const messageQueue = new AsyncQueue<string>();
-        streamData.forEach((data) => streamQueue.enqueue(data));
-        streamQueue.enableBlockIfEmpty(false);
         
+        const streamCh = new Channel<string>();
+        const messageCh = new Channel<string>();
+        streamData.forEach((data) => streamCh.produce(data));
+        streamCh.produce(null as any);
+
         const api = new GenerativeLanguageAPI({} as any, {} as any);
-        const response = await api.parseStream(streamQueue.consumer(), messageQueue.producer());
+        const response = await api.parseStreamData({} as any, streamCh, messageCh);
         expect(response.content[0]).toBe('Hello\n');
     });
     

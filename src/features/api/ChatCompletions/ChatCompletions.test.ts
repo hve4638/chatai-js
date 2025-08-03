@@ -2,6 +2,7 @@ import ChatCompletionsAPI, { type ChatCompletionsData } from '.'
 
 import { user, assistant, system } from '@/test/utils'
 import { AsyncQueue } from '@/utils';
+import Channel from '@hve/channel';
 
 
 describe('ChatCompletions : transform ChatAIRequestForm', () => {
@@ -62,7 +63,7 @@ describe('ChatCompletions : transform ChatAIRequestForm', () => {
                     ]
                 }
             ],
-            max_tokens: 512,
+            max_completion_tokens: 512,
             temperature: 1.2,
             top_p: 0.8,
         }
@@ -83,7 +84,7 @@ describe('ChatCompletions : transform ChatAIRequestForm', () => {
     });
 });
 
-describe.skip('ChatCompletionsAPI stream', () => {
+describe('ChatCompletionsAPI stream', () => {
     test('valid stream data', async () => {
         const streamData = [
             "data: {\"id\":\"example_id\",\"object\":\"chat.completion.chunk\",\"created\":1742052076,\"model\":\"gpt-4o-mini-2024-07-18\",\"service_tier\":\"default\",\"system_fingerprint\":\"fp_06737a9306\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"refusal\":null},\"logprobs\":null,\"finish_reason\":null}],\"usage\":null}",
@@ -103,13 +104,13 @@ describe.skip('ChatCompletionsAPI stream', () => {
             "",
             "",
         ];
-        const streamQueue = new AsyncQueue<string>();
-        const messageQueue = new AsyncQueue<string>();
-        streamData.forEach((data) => streamQueue.enqueue(data));
-        streamQueue.enableBlockIfEmpty(false);
+        const streamCh = new Channel<string>();
+        const messageCh = new Channel<string>();
+        streamData.forEach((data) => streamCh.produce(data));
+        streamCh.produce(null as any);
 
         const api = new ChatCompletionsAPI({} as any, {} as any);
-        const response = await api.parseStream(streamQueue.consumer(), messageQueue.producer());
+        const response = await api.parseStreamData({} as any, streamCh, messageCh);
         expect(response.content[0]).toBe('Hello.');
     });
 });

@@ -1,14 +1,14 @@
-import { GenerationConfig, GenerativeLanguageBody, GenerativeLanguageMessagePart, GenerativeLanguageMessages, GenerativeLanguageRequest, GenerativeLanguageResponse, HarmCategory, Roles, SafetyFilters, SafetySettings } from './types';
+import { GenerationConfig, GenerativeLanguageBody, GenerativeLanguageMessagePart, GenerativeLanguageMessages, GenerativeLanguageRequest, GenerativeLanguageResponse, GenerativeLanguageResponseFormat, HarmCategory, Roles, SafetyFilters, SafetySettings } from './types';
 
-import { ResponseFormat, ChatAIResponse } from '@/types';
+import { ChatAIResponse } from '@/types';
 import { ModelUnsupportError } from '@/errors';
 import {
     ChatMessages,
     ChatType,
     ChatRoleName,
 } from '@/types/request';
-import { JSONSchema } from '@/features/chatai';
 import { ChatAIResultResponse, FinishReason } from '@/types/response';
+import { JSONSchema } from '@/features/response-format';
 
 type GoogleResponseFormat = {
     response_mime_type: 'application/json';
@@ -97,34 +97,39 @@ class GenerativeLanguageTool {
         return contents;
     }
 
-    static parseResponseFormat(responseFormat?: ResponseFormat): GoogleResponseFormat {
-        if (!responseFormat) return { response_mime_type: null };
+    static parseResponseFormat(responseFormat?: GenerativeLanguageResponseFormat): GoogleResponseFormat {
+        if (!responseFormat) {
+            return { response_mime_type: null }
+        }
+        else if (responseFormat.type == 'text') {
+            return { response_mime_type: null }
+        }
+        else if (responseFormat.type == 'json_object') {
+            return {
+                'response_mime_type': 'application/json',
+            };
+        }
+        else if (responseFormat.type == 'json_schema') {
+            const schema = JSONSchema.parse(responseFormat.schema, {
+                'array': (schema, element) => ({ 'type': 'ARRAY', 'items': element }),
+                'object': ({ description }, fields, option) => {
+                    return {
+                        'type': 'OBJECT',
+                        'properties': fields,
+                        'required': option.required,
+                        ...(description && { description })
+                    }
+                },
+                'boolean': ({ description }) => ({ 'type': 'BOOLEAN', ...(description && { description }) }),
+                'number': ({ description }) => ({ 'type': 'NUMBER', ...(description && { description }) }),
+                'string': ({ description }) => ({ 'type': 'STRING', ...(description && { description }) }),
+                'enum': ({ enum: choices, description }) => ({ type: 'STRING', enum: choices, ...(description && { description }) }),
+            });
 
-        if (responseFormat.type == 'json') {
-            if (!responseFormat.schema) {
-                return {
-                    'response_mime_type': 'application/json',
-                };
-            }
-            else {
-                const schema = JSONSchema.parse(responseFormat.schema, {
-                    'array': (element) => ({ 'type': 'ARRAY', 'items': element }),
-                    'object': (properties, options) => {
-                        return {
-                            'type': 'OBJECT',
-                            'properties': properties,
-                        }
-                    },
-                    'boolean': () => ({ 'type': 'BOOLEAN' }),
-                    'number': () => ({ 'type': 'NUMBER' }),
-                    'string': () => ({ 'type': 'STRING' }),
-                });
-
-                return {
-                    'response_mime_type': 'application/json',
-                    'response_schema': schema,
-                };
-            }
+            return {
+                'response_mime_type': 'application/json',
+                'response_schema': schema,
+            };
         }
 
         return { response_mime_type: null };
@@ -162,28 +167,7 @@ class GenerativeLanguageTool {
             content.push('');
         }
 
-        let finishReason: FinishReason;
-        let warning: string | null = null;
-        switch (candidate.finishReason) {
-            case 'STOP':
-                finishReason = FinishReason.End;
-                break;
-            case 'MAX_TOKENS':
-                finishReason = FinishReason.MaxToken;
-                break;
-            case 'SAFETY':
-                finishReason = FinishReason.Blocked;
-                warning = 'blocked by SAFETY';
-                break;
-            case 'OTHER':
-                finishReason = FinishReason.Unknown;
-                warning = 'blocked by OTHER';
-                break;
-            default:
-                finishReason = FinishReason.Unknown;
-                warning = `unhandled reason: ${candidate.finishReason}`;
-                break;
-        }
+        let { finishReason, warning = null } = this.parseFinishReason(candidate.finishReason);
 
         return {
             ok: true,
@@ -201,6 +185,37 @@ class GenerativeLanguageTool {
                 total: data.usageMetadata?.totalTokenCount ?? 0,
             },
             finish_reason: finishReason,
+        }
+    }
+
+    static parseFinishReason(reason: string): { finishReason: FinishReason; warning: string | null; } {
+        switch (reason) {
+            case 'STOP':
+                return {
+                    finishReason: FinishReason.End,
+                    warning: null,
+                };
+            case 'MAX_TOKENS':
+                return {
+                    finishReason: FinishReason.MaxToken,
+                    warning: null,
+                };
+                break;
+            case 'SAFETY':
+                return {
+                    finishReason: FinishReason.Blocked,
+                    warning: 'blocked by SAFETY',
+                }
+            case 'OTHER':
+                return {
+                    finishReason: FinishReason.Unknown,
+                    warning: 'blocked by OTHER',
+                };
+            default:
+                return {
+                    finishReason: FinishReason.Unknown,
+                    warning: `unhandled reason: ${reason}`,
+                }
         }
     }
 }

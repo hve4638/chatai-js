@@ -20,6 +20,10 @@ class ResponsesTool {
             body.reasoning ??= {};
             body.reasoning.effort = request.thinking_effort;
         }
+
+        if (option.stream) {
+            body.stream = true;
+        }
         // @TODO: 추론 요약 옵션이 작동하지 않는 문제
         // if (data.thinking_summary) {
         //     body.reasoning ??= {};

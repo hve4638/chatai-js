@@ -1,3 +1,5 @@
+export type AnthropicClaudeStreamData = any;
+
 export type ClaudeStreamDataMessageStart = {
     type: 'message_start';
     message: {

@@ -12,7 +12,10 @@ export {
 } from '@/types'
 export {
     Chat, ChatRole,
-    JSONFormat, JSONSchema,
 } from '@/features/chatai'
+export {
+    JSONSchema,
+    ResponseFormat
+} from '@/features/response-format'
 
 // export default ChatAI;

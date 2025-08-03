@@ -1,10 +1,10 @@
-import { ChatAIRequest } from '@/types'
+import { ChatAIRequest, FinishReason } from '@/types'
 import type { ChatAIResult, ChatAIResultResponse } from '@/types/response';
 
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { AsyncQueueConsumer } from '@/utils/AsyncQueue';
 import {
-    AnthropicBody,
+    AnthropicClaudeBody,
     AnthropicData,
     AnthropicResponse,
     ClaudeStreamData,
@@ -18,6 +18,8 @@ import {
 import { BaseChatAIRequestAPI } from '../base';
 import AnthropicAPITool from './AnthropicAPITool';
 import { ChatAIResponse, ChatAIRequestOption } from '@/types';
+import Channel from '@hve/channel';
+import AnthropicAPIStreamTool from './AnthropicAPIStreamTool';
 
 class AnthropicAPI extends BaseChatAIRequestAPI<AnthropicData> {
     static readonly DEFAULT_URL = 'https://api.anthropic.com/v1/messages';
@@ -39,7 +41,7 @@ class AnthropicAPI extends BaseChatAIRequestAPI<AnthropicData> {
         return this.body.url ?? AnthropicAPI.DEFAULT_URL;
     }
 
-    async makeRequestConfig():Promise<AxiosRequestConfig<any>> {
+    async makeRequestConfig(): Promise<AxiosRequestConfig<any>> {
         const headers = {
             'Content-Type': 'application/json',
             'x-api-key': this.body.auth.api_key,
@@ -52,70 +54,48 @@ class AnthropicAPI extends BaseChatAIRequestAPI<AnthropicData> {
             return { headers };
         }
     }
-    async makeRequestData(): Promise<AnthropicBody> {
+    async makeRequestData(): Promise<AnthropicClaudeBody> {
         const body = AnthropicAPITool.parseBody(this.body, this.option);
         return body;
     }
-    async parseResponseOK(request:ChatAIRequest, response:ChatAIResponse):Promise<ChatAIResultResponse> {
+    async parseResponseOK(request: ChatAIRequest, response: ChatAIResponse): Promise<ChatAIResultResponse> {
         return AnthropicAPITool.parseResponseOK(response as ChatAIResponse<AnthropicResponse>);
     }
 
-    async mergeStreamFragment() {
-        throw new Error('Not implemented');
+    async parseStreamData(response: ChatAIResponse, streamCh: Channel<string>, messageCh: Channel<string>): Promise<ChatAIResultResponse> {
+        const chatAIResponse: ChatAIResultResponse = {
+            ok: true,
+            http_status: response.status,
+            http_status_text: response.message,
+            raw: null,
+
+            content: [],
+            thinking_content: [],
+            warning: '',
+
+            tokens: {
+                input: 0,
+                output: 0,
+                total: 0,
+            },
+            finish_reason: FinishReason.Unknown,
+        };
+
+        while (true) {
+            const data = await AnthropicAPIStreamTool.receiveStream(streamCh);
+            if (data === null) break;
+
+            const message = await AnthropicAPIStreamTool.parseStreamData(data, chatAIResponse);
+            if (message !== null) {
+                if (chatAIResponse.content.length === 0) chatAIResponse.content.push(message);
+                else chatAIResponse.content[0] += message;
+
+                messageCh.produce(message);
+            }
+        }
+        messageCh.close();
+        return chatAIResponse;
     }
-
-    async parseStreamData():Promise<string | undefined> {
-        throw new Error('Not implemented');
-    }
-    
-    // protected override async mergeStreamFragment(streamConsumer: AsyncQueueConsumer<string>): Promise<unknown | null> {
-    //     let partOfChunk:string|null = null;
-    //     while(true) {
-    //         const line = await streamConsumer.dequeue();
-    //         if (line === null) return null;
-            
-    //         // "event:" 로 시작하는 줄은 무시하고 "data:" 만 처리
-    //         let fragment:string;
-    //         if (partOfChunk === null) {
-    //             if (!line.startsWith('data:')) {
-    //                 continue;
-    //             }
-    //             fragment = line.slice(5).trim();
-    //         }
-    //         else {
-    //             fragment = partOfChunk + line;
-    //             partOfChunk = null;
-    //         }
-
-    //         try {
-    //             return JSON.parse(fragment);
-    //         }
-    //         catch (e) {
-    //             partOfChunk = fragment;
-    //             console.error('Incomplete stream data : ', fragment);
-    //             continue;
-    //         }
-    //     }
-    // }
-    // protected override async parseStreamData(data: unknown, responseResult: ChatAIResultResponse): Promise<string | undefined> {
-    //     const streamData = data as ClaudeStreamData;
-
-    //     switch (streamData.type) {
-    //         case 'message_start':
-    //             return this.#parseStreamMessageStart(streamData, responseResult);
-    //         case 'content_block_start':
-    //             return this.#parseStreamContentBlockStart(streamData, responseResult);
-    //         case 'content_block_delta':
-    //             return this.#parseStreamContentBlockDelta(streamData, responseResult);
-    //         case 'content_block_stop':
-    //             return this.#parseStreamContentBlockStop(streamData, responseResult);
-    //         case 'message_delta':
-    //             return this.#parseStreamMessageDelta(streamData, responseResult);
-    //         case 'message_stop':
-    //         case 'ping':
-    //             return undefined;
-    //     }
-    // }
 
     // async #parseStreamMessageStart(data: ClaudeStreamDataMessageStart, responseResult: ChatAIResultResponse):Promise<string|undefined> {
     //     const usage = data.message.usage;

@@ -1,5 +1,5 @@
 import type { RequestDebugOption } from './types'
-import type { ChatAIResult } from '@/types/response'
+import type { ChatAIResult, ChatAIResultResponse } from '@/types/response'
 import {
     AnthropicAPI,
     type AnthropicData,
@@ -16,62 +16,119 @@ import {
 } from '@/features/api'
 import APIProcess from './APIProcess'
 import ResponsesAPI from '../api/Responses/ResponsesAPI'
+import Channel from '@hve/channel'
+import { ChatAIResponse } from '@/types'
+import { IncomingMessage } from 'node:http'
 
 class ChatAI {
-    private constructor() {}
+    private constructor() { }
 
-    /** OpenAI 구 API */
-    static async requestChatCompletion(data:ChatCompletionsData, debug:RequestDebugOption = {}):Promise<ChatAIResult> {
+    static readonly request = {
+        chatCompletion: async (data: ChatCompletionsData, debug: RequestDebugOption = {}) => {
+            const api = new ChatCompletionsAPI(data, { stream: false });
+
+            return await this.#request(api, debug) as ChatAIResult;
+        },
+        responses: async (data: ChatCompletionsData, debug: RequestDebugOption = {}) => {
+            const api = new ResponsesAPI(data, { stream: false });
+
+            return await this.#request(api, debug) as ChatAIResult;
+        },
+        anthropic: async (data: AnthropicData, debug: RequestDebugOption = {}) => {
+            const api = new AnthropicAPI(data, { stream: false });
+
+            return await this.#request(api, debug) as ChatAIResult;
+        },
+        generativeLanguage: async (data: GenerativeLanguageData, debug: RequestDebugOption = {}) => {
+            const api = new GenerativeLanguageAPI(data, { stream: false });
+
+            return await this.#request(api, debug) as ChatAIResult;
+        },
+        requestVertexAI: async (data: VertexAIData, debug: RequestDebugOption = {}) => {
+            const api = new VertexAIAPI(data, { stream: false });
+
+            return await this.#request(api, debug) as ChatAIResult;
+        }
+    }
+    static readonly stream = {
+        chatCompletion: async (data: ChatCompletionsData, debug: RequestDebugOption = {}) => {
+            const api = new ChatCompletionsAPI(data, { stream: true });
+
+            return await this.#stream(api, debug);
+        },
+        responses: async (data: ChatCompletionsData, debug: RequestDebugOption = {}) => {
+            const api = new ResponsesAPI(data, { stream: true });
+
+            return await this.#stream(api, debug);
+        },
+        anthropic: async (data: AnthropicData, debug: RequestDebugOption = {}) => {
+            const api = new AnthropicAPI(data, { stream: true });
+
+            return await this.#stream(api, debug);
+        },
+        generativeLanguage: async (data: GenerativeLanguageData, debug: RequestDebugOption = {}) => {
+            const api = new GenerativeLanguageAPI(data, { stream: true });
+
+            return await this.#stream(api, debug);
+        },
+    }
+
+    /**
+     * OpenAI의 AI 요청 Endpoint
+     * 
+     * 대부분의 공급자는 ChatCompletion API와의 호환성 제공
+     * */
+    static async requestChatCompletion(data: ChatCompletionsData, debug: RequestDebugOption = {}): Promise<ChatAIResult> {
         const api = new ChatCompletionsAPI(data, { stream: false });
 
-        return await this.request(api, debug);
+        return await this.#request(api, debug);
     }
 
     /** OpenAI 신규 API */
-    static async requestResponses(data:ResponsesData, debug:RequestDebugOption = {}):Promise<ChatAIResult> {
+    static async requestResponses(data: ResponsesData, debug: RequestDebugOption = {}): Promise<ChatAIResult> {
         const api = new ResponsesAPI(data, { stream: false });
 
-        return await this.request(api, debug);
+        return await this.#request(api, debug);
     }
 
     /** Google API */
-    static async requestGenerativeLanguage(data:GenerativeLanguageData, debug:RequestDebugOption = {}):Promise<ChatAIResult> {
+    static async requestGenerativeLanguage(data: GenerativeLanguageData, debug: RequestDebugOption = {}): Promise<ChatAIResult> {
         const api = new GenerativeLanguageAPI(data, { stream: false });
 
-        return await this.request(api, debug);
+        return await this.#request(api, debug);
     }
 
     /** Anthropic API */
-    static async requestAnthropic(data:AnthropicData, debug:RequestDebugOption = {}):Promise<ChatAIResult> {
+    static async requestAnthropic(data: AnthropicData, debug: RequestDebugOption = {}): Promise<ChatAIResult> {
         const api = new AnthropicAPI(data, { stream: false });
 
-        return await this.request(api, debug);
+        return await this.#request(api, debug);
     }
 
-    static async requestVertexAI(data:VertexAIData, debug:RequestDebugOption = {}):Promise<ChatAIResult> {
+    static async requestVertexAI(data: VertexAIData, debug: RequestDebugOption = {}): Promise<ChatAIResult> {
         const api = new VertexAIAPI(data, { stream: false });
 
-        return await this.request(api, debug);
+        return await this.#request(api, debug);
     }
 
-    private static async request(api:BaseChatAIRequestAPI, debug:RequestDebugOption = {}):Promise<ChatAIResult> {
-        const [successed, requestArgs, response] = await APIProcess.requestAPI(api);
-        
+    static async #request(api: BaseChatAIRequestAPI, debug: RequestDebugOption = {}): Promise<ChatAIResult> {
+        const { success, requestArgs, response } = await APIProcess.requestAPI(api);
+
         let requestResult = (
             debug.disableMasking
-            ? APIProcess.parseToResultRequest(requestArgs)
-            : await APIProcess.makeMaskedRequest(api)
+                ? APIProcess.parseToResultRequest(requestArgs)
+                : await APIProcess.makeMaskedRequest(api)
         );
-        if (successed) {
+        if (success) {
             return {
-                request : requestResult,
-                response : await api.parseResponseOK(requestArgs, response),
+                request: requestResult,
+                response: await api.parseResponseOK(requestArgs, response),
             };
         }
         else {
             return {
-                request : requestResult,
-                response : await api.parseResponseFail(requestArgs, response),
+                request: requestResult,
+                response: await api.parseResponseFail(requestArgs, response),
             };
         }
     }
@@ -83,236 +140,71 @@ class ChatAI {
      * @param debug 
      * @returns [messageGenerator, responsePromise]
      */
-    // async stream(
-    //     form:ChatAIRequestForm,
-    //     debug:RequestDebugOption = {}
-    // ):Promise<[AsyncGenerator<string, void, unknown>, Promise<ChatAIResult>]> {
-    //     const processedForm = this.#preprocessForm(form);
-        
-    //     const endpoint = this.#endpoints[processedForm.endpoint];
-    //     const option = { stream: true }
-    //     const [successed, requestArgs, response] = await this.#fetchEndpoint(endpoint, processedForm, option);
+    static async #stream(api: BaseChatAIRequestAPI, debug: RequestDebugOption = {}): Promise<{
+        messages: AsyncGenerator<string, void, unknown>
+        result: Promise<ChatAIResult>,
+        debug?: {
+            rawStream?: AsyncGenerator<string, void, unknown>
+        }
+    }> {
+        const { success, requestArgs, response } = await APIProcess.requestAPI(api);
 
-    //     if (!successed) throw new ChatAIError('Request failed');
-    //     const streamDataQueue = new AsyncQueue<string>();
-    //     const messageQueue = new AsyncQueue<string>();
-    //     streamDataQueue.enableBlockIfEmpty(true);
-    //     messageQueue.enableBlockIfEmpty(true);
-        
-    //     const debugRawStream:string[] = [];
-    //     const decoder = new TextDecoder();
-    //     response.data.on('data', (chunk: AllowSharedBufferSource | undefined) => {
-    //         const lines = decoder.decode(chunk, { stream: true }).split('\n');
-    //         for (const line of lines) {
-    //             streamDataQueue.enqueue(line);
-    //             if (debug.rawStream) {
-    //                 debugRawStream.push(line);
-    //             }
-    //         }
-    //     });
-    //     response.data.on('end', () => {
-    //         streamDataQueue.enableBlockIfEmpty(false);
-    //     });
+        let resultRequest = (
+            debug.disableMasking
+                ? APIProcess.parseToResultRequest(requestArgs)
+                : await APIProcess.makeMaskedRequest(api)
+        );
+        if (!success) {
+            async function* noGen() { return; }
+            return {
+                messages: noGen(),
+                result: api.parseResponseFail(requestArgs, response)
+                    .then((response) => ({
+                        request: resultRequest,
+                        response,
+                    })),
+            };
+        }
 
+        const rawStreamCh = new Channel<string>();
+        const {
+            messageStream,
+            response: resultResponse,
+        } = api.parseResponseStreamOK(
+            requestArgs,
+            response as ChatAIResponse<IncomingMessage>,
+            debug.rawStream ? rawStreamCh : undefined
+        );
 
-    //     async function *messageGenerator(queue:AsyncQueueConsumer<string>) {
-    //         while (true) {
-    //             const text = await queue.dequeue();
-    //             if (text === null) {
-    //                 break;
-    //             }
-    //             yield text as string;
-    //         }
-    //     }
-    //     const resolveResponse = async () => {
-    //         const request = (
-    //             debug.disableMasking
-    //             ? this.#convertArgsToRequestResult(requestArgs)
-    //             : await this.#maskResultRequest(endpoint, processedForm, option)
-    //         );
-    //         const response = await endpoint.parseStream(streamDataQueue.consumer(), messageQueue.producer());
-    //         const result:ChatAIResult = {
-    //             request: request,
-    //             response: response,
-    //         }
+        async function* messageGenerator(chan: Channel<string>) {
+            while (true) {
+                const text = await chan.consume();
+                if (text === null) {
+                    break;
+                }
+                yield text as string;
+            }
+        }
+        const resolveResponse = async (resultResponse: ChatAIResultResponse) => {
+            const result: ChatAIResult = {
+                request: resultRequest,
+                response: resultResponse,
+            }
+            return result;
+        };
 
-    //         if (debug.rawStream) {
-    //             result.debug ??= {}
-    //             result.debug['rawStream'] = debugRawStream;
-    //         }
-    //         return result;
-    //     };
-        
-    //     return [messageGenerator(messageQueue.consumer()), resolveResponse()];
-    // }
+        const debugResult: any = {};
+        // debugResult.rawStream = messageGenerator(rawStreamCh);
+        // debugResult.ch = rawStreamCh;
+        debugResult.ch = messageStream;
 
-    // async batch() {
-    //     ;
-    // }
-
-    // async batchResult() {
-    //     ;
-    // }
-
-    // async #fetchEndpoint(
-    //     endpoint:BaseEndpoint, form:ValidChatRequestForm, option:ChatAIRequestOption
-    // ):Promise<[boolean, ChatAIRequest, AxiosResponse<any, any>]> {
-    //     const action = await endpoint.preprocess(form, option);
-    //     if (action === EndpointAction.Abort) {
-    //         throw new ChatAIError('Request aborted by preprocess');
-    //     }
-    //     try {
-    //         let retryCount = 0;
-    //         let response:AxiosResponse<any, any>;
-    //         let requestArgs:ChatAIRequest;
-    //         while (true) {
-    //             if (retryCount >= 5) {
-    //                 throw new ChatAIError('Request failed after 5 tries. Aborting.');
-    //             }
-    //             requestArgs = await this.#getRequestArgs(endpoint, form, option);
-    //             const { url, data, config } = requestArgs;
-                
-    //             try {
-    //                 response = await axios.post(url, data, {
-    //                     ...config,
-    //                     responseType: option.stream ? 'stream' : 'json',
-    //                 });
-    //             }
-    //             catch (error: unknown) {
-    //                 const action = await endpoint.catchFetchFailed(error, retryCount);
-    //                 if (action === EndpointAction.Retry) {
-    //                     retryCount++;
-    //                     continue;
-    //                 }
-    //                 else {
-    //                     throw error;
-    //                 }
-    //             }
-                
-    //             if (response.status >= 200 && response.status < 300) {
-    //                 return [
-    //                     true,
-    //                     requestArgs,
-    //                     response,
-    //                 ];
-    //             }
-    //             else {
-    //                 const action = await endpoint.catchResponseFailed(response, retryCount);
-    //                 if (action === EndpointAction.Retry) {
-    //                     retryCount++;
-    //                     continue;
-    //                 }
-    //                 else if (action === EndpointAction.Abort) {
-    //                     throw new ChatAIError(`Request failed with status ${response.status}`);
-    //                 }
-    //                 else {
-    //                     return [
-    //                         false,
-    //                         requestArgs,
-    //                         response,
-    //                     ];
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     finally {
-    //         endpoint.postprocess(form, option);
-    //     }
-    // }
-
-    // #preprocessForm(source:ChatAIRequestForm):ValidChatRequestForm {
-    //     const form = structuredClone(source);
-        
-    //     if (form.provider && form.base_url && form.endpoint) {
-    //         console.warn(`'provider' is ignored because 'base_url' and 'endpoint' are provided`);
-    //         delete form.provider;
-    //     }
-
-    //     if (form.provider) {
-    //         const endpointName = ChatAI.#providers[form.provider];
-    //         const endpoint = this.#endpoints[endpointName];
-    //         if (!endpointName || !endpoint) {
-    //             throw new ChatAIError(`Unknown provider: ${form.provider}`);
-    //         }
-            
-    //         form.base_url ??= endpoint.baseURL;
-    //         form.endpoint ??= endpointName;
-    //     }
-        
-    //     if (!form.base_url) {
-    //         throw new ChatAIError(`'provider' or 'base_url' is required`);
-    //     }
-    //     else if (!form.endpoint) {
-    //         throw new ChatAIError(`'provider' or 'endpoint' is required`);
-    //     }
-
-    //     form.temperature ??= 1.0;
-    //     form.top_p ??= 1.0;
-    //     form.max_tokens ??= 1024;
-
-    //     return form as ValidChatRequestForm;
-    // }
-
-    // async #getRequestArgs(endpoint:BaseEndpoint, form:ValidChatRequestForm, option:ChatAIRequestOption):Promise<ChatAIRequest> {
-    //     const url = await endpoint.makeRequestURL(form, option);
-    //     const data = await endpoint.makeRequestData(form, option);
-    //     const config = await endpoint.makeRequestConfig(form, option);
-        
-    //     return { url, data, config, form };
-    // }
-
-    // async #maskResultRequest(endpoint:BaseChatAIRequestAPI):Promise<ChatAIResultRequest> {
-    //     const masked = endpoint.mask();
-    //     APIProcess.makeMaskedRequest(endpoint)
-    //     const args = await this.#getRequestArgs(endpoint);
-    //     return {
-    //         form : maskedForm,
-    //         url : args.url,
-    //         headers : args.config.headers,
-    //         data : args.data,
-    //     };
-    // }
-
-    // #convertArgsToRequestResult(requestArgs:ChatAIRequest):ChatAIResultRequest {
-    //     return {
-    //         form : requestArgs.form,
-    //         url : requestArgs.url,
-    //         headers : requestArgs.config.headers,
-    //         data : requestArgs.data,
-    //     };
-    // }
-
-    // async rawStream(form:ChatAIRequestForm) {
-    //     const processedForm = this.#preprocessForm(form);
-        
-    //     const endpoint = this.#endpoints[processedForm.endpoint];
-    //     const option = { stream: true }
-    //     const [successed, requestArgs, response] = await this.#fetchEndpoint(endpoint, processedForm, option);
-        
-    //     const queue = new AsyncQueue<string>();
-    //     const decoder = new TextDecoder();
-    //     response.data.on('data', (chunk: AllowSharedBufferSource | undefined) => {
-    //         const lines = decoder.decode(chunk, { stream: true }).split('\n');
-    //         for (const line of lines) {
-    //             queue.enqueue(line);
-    //         }
-    //     });
-    //     response.data.on('end', () => {
-    //         queue.enableBlockIfEmpty(false);
-    //     });
-
-        
-    //     async function *messageGenerator(queue:AsyncQueueConsumer<string>) {
-    //         while (true) {
-    //             const text = await queue.dequeue();
-    //             if (text === null) {
-    //                 break;
-    //             }
-    //             yield text as string;
-    //         }
-    //     }
-    //     return messageGenerator(queue.consumer());
-    // }
+        return {
+            // messages: messageGenerator(messageStream),
+            messages: messageGenerator(messageStream),
+            result: resultResponse.then(chatAIResponse => resolveResponse(chatAIResponse)),
+            debug: debugResult,
+        };
+    }
 }
 
 export default ChatAI;

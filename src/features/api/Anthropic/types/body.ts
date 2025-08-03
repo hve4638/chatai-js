@@ -1,6 +1,6 @@
 import { Roles } from './roles';
 
-export type AnthropicBody = {
+export type AnthropicClaudeBody = {
     model: string
     messages: AnthropicMessages;
     system?: string;

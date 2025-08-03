@@ -1,6 +1,7 @@
 export type {
     GenerativeLanguageRequest,
     GenerativeLanguageData,
+    GenerativeLanguageResponseFormat,
     VertexAIGenerativeLanguageData,
     SafetyFilters,
     HarmCategory,
@@ -14,6 +15,9 @@ export type {
     SafetySettings,
     SafetyFilterThreshold
 } from './body';
+export type {
+    GenerativeLanguageStreamData
+} from './stream';
 
 export { DefaultRole, Roles } from './role';
 

@@ -1,16 +1,17 @@
 import { ChatRoleName, ChatType, ChatAIResponse, ChatAIRequestOption, ChatMessages } from '@/types';
-import { AnthropicBody, AnthropicRequest, AnthropicMessages, Roles, AnthropicResponse, AnthropicMessageContent } from './types';
+import { AnthropicClaudeBody, AnthropicRequest, AnthropicMessages, Roles, AnthropicResponse, AnthropicMessageContent, AnthropicRequestResponseFormat } from './types';
 import { ModelUnsupportError } from '@/errors';
 import { ChatAIResultResponse, FinishReason } from '@/types/response';
+import { ChatAITool } from '../base';
 
 class AnthropicAPITool {
-    static parseBody(request: AnthropicRequest, option: ChatAIRequestOption): AnthropicBody {
+    static parseBody(request: AnthropicRequest, option: ChatAIRequestOption): AnthropicClaudeBody {
         const {
             messages,
             system
         } = this.parseMessages(request.messages);
 
-        const body: AnthropicBody = {
+        const body: AnthropicClaudeBody = {
             model: request.model,
             messages: messages,
             max_tokens: request.max_tokens ?? 1024,
@@ -139,21 +140,10 @@ class AnthropicAPITool {
             content.push('');
         }
 
-        let finishReason: FinishReason;
+        const finishReason = this.parseFinishReason(data.stop_reason);
         let warning: string | null = null;
-        switch (data.stop_reason) {
-            case 'end_turn':
-                finishReason = FinishReason.End;
-                break;
-            case 'max_tokens':
-                finishReason = FinishReason.MaxToken;
-                break;
-            case 'tool_use':
-                finishReason = FinishReason.ToolUse;
-                break;
-            default:
-                finishReason = FinishReason.Unknown;
-                warning = `Unhandled reason: ${data.stop_reason}`;
+        if (finishReason === FinishReason.Unknown) {
+            warning = ChatAITool.getUnhandledReasonWarningMessage(data.stop_reason);
         }
 
         const input_tokens = data.usage.input_tokens;
@@ -174,6 +164,19 @@ class AnthropicAPITool {
                 total: input_tokens + output_tokens,
             },
             finish_reason: finishReason,
+        }
+    }
+
+    static parseFinishReason(rawFinishReason: string): FinishReason {
+        switch (rawFinishReason) {
+            case 'end_turn':
+                return FinishReason.End;
+            case 'max_tokens':
+                return FinishReason.MaxToken;
+            case 'tool_use':
+                return FinishReason.ToolUse;
+            default:
+                return FinishReason.Unknown;
         }
     }
 }

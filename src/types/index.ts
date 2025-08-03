@@ -18,15 +18,6 @@ export type {
 } from './request-options'
 
 export type {
-    RawJSONSchema,
-    JSONObjectSchemaOptions,
-    JSONSchemaHandler,
-    ResponseFormat,
-    TextFormat,
-    JSONFormat
-} from './response-format'
-
-export type {
     ChatAIRequest,
     ChatAIResponse,
 } from './fetch-data'

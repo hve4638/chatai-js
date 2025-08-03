@@ -1,6 +1,6 @@
 import 'dotenv/config';
-import { ChatAI, Chat, ChatRole } from '@/.'
-import { FinishReason } from '@/types';
+
+import { ChatAI, Chat, ChatRole, ResponseFormat, JSONSchema, FinishReason } from '@/.'
 
 const hasApiKey = !!process.env['CLAUDE_KEY'];
 
@@ -40,7 +40,7 @@ const hasApiKey = !!process.env['CLAUDE_KEY'];
     }, 10000);
 
     test('fetch: vision', async () => {
-        const target = './.test/target.jpg';
+        const target = './.test/target.png';
 
         const result = await ChatAI.requestAnthropic({
             messages: [
@@ -112,34 +112,42 @@ const hasApiKey = !!process.env['CLAUDE_KEY'];
     });
 
     test('fetch : stream', async () => {
-        // const [stream, resultPromise] = await ChatAI.stream({
-        //     message : [
-        //         ChatRole.User(
-        //             Chat.Text("Say just 'hello'. Do not answer anything else.")
-        //         )
-        //     ],
-        //     provider : KnownProvider.Anthropic,
-        //     model_name : 'claude-3-5-haiku-20241022',
-        //     secret : {
-        //         api_key : apiKey
-        //     },
-        //     max_tokens : 128,
-        //     temperature : 1.0,
-        // }, { rawStream: true });
+        const streamResult = await ChatAI.stream.anthropic({
+            messages: [
+                ChatRole.User(
+                    Chat.Text("Say just 'hello'. Do not answer anything else.")
+                )
+            ],
+            model: 'claude-3-5-haiku-20241022',
+            auth: {
+                api_key: apiKey
+            },
+            max_tokens: 10,
+            temperature: 0.1,
+        });
+        const {
+            messages
+        } = streamResult;
+        const {
+            request, response
+        } = await streamResult.result;
+        
+        const ls:string[] = [];
+        for await (const m of messages) {
+            ls.push(m);
+        }
+        const streamMessage = ls.join('');
 
-        // let messageList:string[] = [];
-        // for await (const fragment of stream) {
-        //     messageList.push(fragment);
-        // }
-
-        // let message:string = messageList.join('');
-        // const result = await resultPromise;
-        // const response = result.response;
-        // expect(result.response.content[0]).toEqual(message);
-
-        // expect(response.ok).toBe(true);
-        // expect(response.http_status).toBe(200);
-        // expect(response.finish_reason).toBe('end_turn');
-        // expect(response.content[0].trim().toLowerCase().replaceAll('.', '')).toEqual('hello')
+        expect(request.url).toEqual('https://api.anthropic.com/v1/messages');
+        expect(request.headers).toEqual({
+            'Content-Type': 'application/json',
+            'x-api-key': 'SECRET',
+            'anthropic-version': '2023-06-01'
+        });
+        expect(response.ok).toBe(true);
+        expect(response.http_status).toBe(200);
+        expect(response.finish_reason).toBe(FinishReason.End);
+        expect(response.content[0].trim().toLowerCase().replaceAll('.', '')).toEqual('hello');
+        expect(response.content[0]).toEqual(streamMessage);
     });
 });

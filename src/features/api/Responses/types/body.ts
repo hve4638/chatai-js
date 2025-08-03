@@ -22,7 +22,7 @@ export interface ResponsesBody {
     background?: boolean;
     include?: unknown;
 
-    // stream?: boolean;
+    stream?: boolean;
 }
 
 export type ResponsesMessages = {

@@ -11,6 +11,7 @@ import { BaseChatAIRequestAPI } from '../base'
 import { VertexAIData } from './types'
 import VertexAITool from './VertexAITool'
 import { ChatAIResponse } from '@/types'
+import Channel from '@hve/channel'
 
 
 class VertexAIAPI extends BaseChatAIRequestAPI<VertexAIData> {
@@ -137,16 +138,9 @@ class VertexAIAPI extends BaseChatAIRequestAPI<VertexAIData> {
         }
     }
 
-    protected override mergeStreamFragment(streamFragmentConsumer: AsyncQueueConsumer<string>): Promise<unknown | null> {
-        throw new Error('Method not implemented.')
+    parseStreamData(response: ChatAIResponse, streamCh: Channel<string>, messageCh: Channel<string>): Promise<ChatAIResultResponse> {
+        throw new Error('Method not implemented.');
     }
-    protected override parseStreamData(data: unknown, responseCandidate: ChatAIResultResponse): Promise<string | undefined> {
-        throw new Error('Method not implemented.')
-    }
-
-    // async handleStreamChunk(chunkOutputQueue:AsyncQueue, messageInputQueue:AsyncQueue):Promise<Omit<ChatAIResult['response'],'ok'|'http_status'|'http_status_text'>> {
-    //     throw new Error('Not implemented.');
-    // }
 }
 
 export default VertexAIAPI;

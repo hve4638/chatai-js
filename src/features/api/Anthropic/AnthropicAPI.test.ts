@@ -1,6 +1,7 @@
 import AnthropicAPI, { type AnthropicData } from '.'
 import { user, assistant, system } from '@/test/utils'
 import { AsyncQueue } from '@/utils';
+import Channel from '@hve/channel';
 
 describe('ClaudeEndpoint request form', () => {
     const body: AnthropicData = {
@@ -73,7 +74,7 @@ describe('ClaudeEndpoint request form', () => {
     });
 });
 
-describe.skip('AnthropicAPI stream', () => {
+describe('AnthropicAPI stream', () => {
     test('valid response', async () => {
         const streamData = [
             "event: message_start",
@@ -103,13 +104,13 @@ describe.skip('AnthropicAPI stream', () => {
             "",
         ];
 
-        const streamQueue = new AsyncQueue<string>();
-        const messageQueue = new AsyncQueue<string>();
-        streamData.forEach((data) => streamQueue.enqueue(data));
-        streamQueue.enableBlockIfEmpty(false);
+        const streamCh = new Channel<string>();
+        const messageCh = new Channel<string>();
+        streamData.forEach((data) => streamCh.produce(data));
+        streamCh.produce(null as any);
 
         const api = new AnthropicAPI({} as any, {} as any);
-        const response = await api.parseStream(streamQueue.consumer(), messageQueue.producer());
+        const response = await api.parseStreamData({} as any, streamCh, messageCh);
         expect(response.content[0]).toBe('hello');
     });
 });

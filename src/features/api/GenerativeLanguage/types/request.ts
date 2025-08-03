@@ -1,12 +1,15 @@
-import { ResponseFormat } from '@/types';
+
+import { TextFormat, JSONSchemaFormat, JSONObjectFormat, EnumFormat } from '@/types/response-format';
 import type { SafetyFilterThreshold } from './body';
 import { BaseRequest, APIKeyAuth, VertexAIAuth } from '@/types/request-data';
+
+export type GenerativeLanguageResponseFormat = TextFormat | JSONSchemaFormat | JSONObjectFormat | EnumFormat;
 
 export interface GenerativeLanguageRequest extends BaseRequest{
     top_p?: number;
     top_k?: number;
     safety_settings?: Partial<SafetyFilters>;
-    response_format?: ResponseFormat;
+    response_format?: GenerativeLanguageResponseFormat;
     
     thinking_tokens?: number;
     thinking_summary?: boolean;

@@ -6,7 +6,10 @@ export type {
     ChatCompletionsResponse,
 } from './response';
 export type {
+    ChatCompletionsStreamData,
+} from './stream-response';
+export type {
     ChatCompletionsMessages,
-    ChatCompletionsResponseFormat,
+    ChatCompletionsBodyResponseFormat,
 } from './body';
 export { Roles } from './roles';

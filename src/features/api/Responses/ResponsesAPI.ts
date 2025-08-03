@@ -1,12 +1,14 @@
 import { AxiosRequestConfig, AxiosResponse } from 'axios'
 
-import { ChatAIRequest, ChatAIRequestOption } from '@/types'
+import { ChatAIRequest, ChatAIRequestOption, ChatAIResultResponse, FinishReason } from '@/types'
 import { ChatAIResponse } from '@/types'
 import { assertFieldExists, AsyncQueue } from '@/utils'
 
 import { BaseChatAIRequestAPI } from '../base'
 import { ResponsesData } from './types'
 import ResponsesTool from './ResponsesTool'
+import Channel from '@hve/channel'
+import ResponsesStreamTool from './ResponsesStreamTool'
 
 class ResponsesAPI extends BaseChatAIRequestAPI<ResponsesData> {
     static readonly DEFAULT_URL = 'https://api.openai.com/v1/responses';
@@ -76,81 +78,45 @@ class ResponsesAPI extends BaseChatAIRequestAPI<ResponsesData> {
         };
     }
 
-    async mergeStreamFragment() {
-        throw new Error('Not implemented');
+    async parseStreamData(response: ChatAIResponse, streamCh: Channel<string>, messageCh: Channel<string>): Promise<ChatAIResultResponse> {
+        const chatAIResponse: ChatAIResultResponse = {
+            ok: true,
+            http_status: response.status,
+            http_status_text: response.message,
+            raw: null,
+
+            content: [],
+            thinking_content: [],
+            warning: '',
+
+            tokens: {
+                input: 0,
+                output: 0,
+                total: 0,
+            },
+            finish_reason: FinishReason.Unknown,
+        };
+
+        while (true) {
+            const data = await ResponsesStreamTool.receiveStream(streamCh);
+            if (data === null) break;
+
+            const message = await ResponsesStreamTool.parseStreamData(data, chatAIResponse);
+            if (message === null) continue;
+            else if (message.type === 'response_delta') {
+                if (chatAIResponse.content.length === 0) chatAIResponse.content.push(message.delta);
+                else chatAIResponse.content[0] += message.delta;
+
+                messageCh.produce(message.delta);
+            }
+            else if (message.type === 'response_overwrite') {
+                if (chatAIResponse.content.length === 0) chatAIResponse.content.push(message.text);
+                else chatAIResponse.content[0] = message.text;
+            }
+        }
+        messageCh.close();
+        return chatAIResponse;
     }
-
-    async parseStreamData():Promise<string | undefined> {
-        throw new Error('Not implemented');
-    }
-
-    // protected async mergeStreamFragment(streamConsumer: AsyncQueueConsumer<string>): Promise<unknown | null> {
-    //     let partOfChunk: string | null = null;
-    //     while (true) {
-    //         const line = await streamConsumer.dequeue();
-    //         if (line === null) return null;
-
-    //         let fragment: string;
-    //         if (partOfChunk === null) {
-    //             if (!line.startsWith('data:')) {
-    //                 continue;
-    //             }
-
-    //             fragment = line.slice(5).trim();
-    //             if (fragment === '[DONE]') {
-    //                 return null;
-    //             }
-    //         }
-    //         else {
-    //             fragment = partOfChunk + line;
-    //             partOfChunk = null;
-    //         }
-
-    //         try {
-    //             return JSON.parse(fragment);
-    //         }
-    //         catch (e) {
-    //             partOfChunk = fragment;
-    //             console.error('Incomplete stream data : ', fragment);
-    //             continue;
-    //         }
-    //     }
-    // }
-    // protected async parseStreamData(data: unknown, response: ChatAIResultResponse): Promise<string | undefined> {
-    //     const streamData = data as {
-    //         usage?: {
-    //             prompt_tokens?: number,
-    //             completion_tokens?: number,
-    //             total_tokens?: number,
-    //         },
-    //         choices?: {
-    //             finish_reason?: string,
-    //             delta?: {
-    //                 content?: string,
-    //             },
-    //         }[],
-    //     };
-
-    //     const usage = streamData.usage;
-    //     if (usage) {
-    //         response.tokens.input = (usage?.prompt_tokens ?? 0) as number;
-    //         response.tokens.output = (usage?.completion_tokens ?? 0) as number;
-    //         response.tokens.total = (usage?.total_tokens ?? 0) as number;
-    //     }
-    //     const choice = streamData.choices?.[0];
-    //     if (!choice) {
-    //         return undefined;
-    //     }
-    //     if (choice.finish_reason) {
-    //         response.finish_reason = choice.finish_reason;
-
-    //         if (choice.finish_reason === 'stop') response.warning = null;
-    //         else if (choice.finish_reason === 'length') response.warning = 'max token limit';
-    //         else response.warning = `unhandle reason : ${response.warning}`;
-    //     }
-
-    //     return choice.delta?.content;
-    // }
 }
 
 export default ResponsesAPI;

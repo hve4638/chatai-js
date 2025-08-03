@@ -20,7 +20,7 @@ export interface ChatCompletionsBody {
         include_usage?: boolean;
     }
     reasoning_effort?: 'low' | 'medium' | 'high';
-    response_format?: ChatCompletionsResponseFormat;
+    response_format?: ChatCompletionsBodyResponseFormat;
 }
 
 export type ChatCompletionsMessages = {
@@ -43,7 +43,7 @@ export type ChatCompletionsMessages = {
         })[];
 }[];
 
-export type ChatCompletionsResponseFormat = {
+export type ChatCompletionsBodyResponseFormat = {
     type: 'json_object';
 } | {
     type: 'json_schema';

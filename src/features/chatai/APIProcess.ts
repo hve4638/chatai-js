@@ -8,8 +8,14 @@ import { ChatAIError } from '@/errors';
 import { ChatAIResultRequest } from '@/types/response';
 import { ChatAIResponse } from '@/types';
 
+interface RequestResult {
+    success: boolean;
+    requestArgs: ChatAIRequest;
+    response: ChatAIResponse;
+}
+
 class APIProcess {
-    static async requestAPI(api: BaseChatAIRequestAPI): Promise<[boolean, ChatAIRequest, ChatAIResponse]> {
+    static async requestAPI(api: BaseChatAIRequestAPI): Promise<RequestResult> {
         const action = await api.preprocess();
         if (action === EndpointAction.Abort) {
             throw new ChatAIError('Request aborted by preprocess');
@@ -40,31 +46,31 @@ class APIProcess {
                     }
                     else {
                         if (error instanceof AxiosError) {
-                            return [
-                                false,
+                            return {
+                                success: false,
                                 requestArgs,
-                                {
+                                response: {
                                     code: error.code,
                                     status: error.status ?? 0,
                                     message: error.message,
                                     data: error.response?.data ?? {},
                                 }
-                            ]
+                            }
                         }
                         throw error;
                     }
                 }
 
                 if (response.status >= 200 && response.status < 300) {
-                    return [
-                        true,
+                    return {
+                        success: true,
                         requestArgs,
-                        {
+                        response: {
                             status: response.status,
                             message: response.statusText,
                             data: response.data,
                         }
-                    ];
+                    };
                 }
                 else {
                     const action = await api.catchResponseFailed(response, retryCount);
@@ -76,16 +82,16 @@ class APIProcess {
                         throw new ChatAIError(`Request failed with status ${response.status}`);
                     }
                     else {
-                        return [
-                            false,
+                        return {
+                            success: false,
                             requestArgs,
-                            {
+                            response: {
                                 code: response.statusText,
                                 status: response.status,
                                 message: `Request failed with status ${response.status}`,
                                 data: response.data,
                             }
-                        ];
+                        };
                     }
                 }
             }
@@ -95,13 +101,13 @@ class APIProcess {
         }
     }
 
-    static async makeMaskedRequest(endpoint: BaseChatAIRequestAPI):Promise<ChatAIResultRequest> {
+    static async makeMaskedRequest(endpoint: BaseChatAIRequestAPI): Promise<ChatAIResultRequest> {
         const masked = endpoint.mask();
         const args = await this.getRequestArgs(masked);
         return this.parseToResultRequest(args);
     }
 
-    static parseToResultRequest(args: ChatAIRequest):ChatAIResultRequest {
+    static parseToResultRequest(args: ChatAIRequest): ChatAIResultRequest {
         return {
             form: args.form,
             url: args.url,

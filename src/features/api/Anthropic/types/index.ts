@@ -2,6 +2,7 @@ export {
     Roles,
 } from './roles';
 export type {
+    AnthropicRequestResponseFormat,
     AnthropicRequest,
     AnthropicData,
     VertexAIAnthropicData,
@@ -10,7 +11,7 @@ export type {
     AnthropicResponse
 } from './response';
 export type {
-    AnthropicBody,
+    AnthropicClaudeBody,
     AnthropicMessages,
     AnthropicMessageContent,
 } from './body';
@@ -21,5 +22,6 @@ export type {
     ClaudeStreamDataContentBlockStop,
     ClaudeStreamDataMessageDelta,
     ClaudeStreamDataMessageStart,
-    ClaudeStreamDataMessageStop
+    ClaudeStreamDataMessageStop,
+    AnthropicClaudeStreamData,
 } from './stream';

@@ -1,16 +1,18 @@
 import { ChatAIRequestOption, ChatMessages, ChatRoleName, ChatType } from '@/types';
 import { ChatCompletionsMessages, ChatCompletionsRequest, Roles } from './types';
-import { ResponseFormat } from '@/types';
-import { JSONSchema } from '@/features/chatai';
-import { ChatCompletionsBody, ChatCompletionsResponseFormat } from './types/body';
+import { JSONSchema } from '@/features/response-format';
+import { ChatCompletionsBody, ChatCompletionsBodyResponseFormat } from './types/body';
 import { ModelUnsupportError } from '@/errors';
+import { ChatCompletionsAllowedResponseFormat } from './types/request';
 
 class ChatCompletionsTool {
     static parseBody(request: ChatCompletionsRequest, option: ChatAIRequestOption): ChatCompletionsBody {
         const messages = ChatCompletionsTool.parseMessages(request.messages);
+
         const body: ChatCompletionsBody = {
             model: request.model,
             messages: messages,
+            // max_tokens: request.max_tokens ?? 1024,
             max_completion_tokens: request.max_tokens ?? 1024,
         }
 
@@ -80,38 +82,49 @@ class ChatCompletionsTool {
         return result;
     }
 
-    static parseResponseFormat(responseFormat?: ResponseFormat): ChatCompletionsResponseFormat | undefined {
-        if (!responseFormat) return;
-
-        if (responseFormat.type === 'json') {
-            if (!responseFormat.schema) {
-                return {
-                    'type': 'json_object'
-                }
+    static parseResponseFormat(responseFormat?: ChatCompletionsAllowedResponseFormat): ChatCompletionsBodyResponseFormat | undefined {
+        if (!responseFormat || responseFormat.type === 'text') {
+            return;
+        }
+        else if (responseFormat.type === 'json_object') {
+            return {
+                'type': 'json_object'
             }
-            else {
-                const schema = JSONSchema.parse(responseFormat.schema, {
-                    'array': (element) => ({ 'type': 'array', 'items': element }),
-                    'object': (properties, options) => {
-                        return {
-                            'type': 'object',
-                            'properties': properties,
-                            'required': options.required ?? [],
-                            'additionalProperties': options.allow_additional_properties ?? false
-                        }
-                    },
-                    'boolean': () => ({ 'type': 'boolean' }),
-                    'number': () => ({ 'type': 'number' }),
-                    'string': () => ({ 'type': 'string' }),
-                });
-
-                return {
-                    'type': 'json_schema',
-                    'json_schema': {
-                        'name': responseFormat.name,
-                        'strict': true,
-                        'schema': schema,
+        }
+        else if (responseFormat.type === 'json_schema') {
+            const schema = JSONSchema.parse(responseFormat.schema, {
+                'array': (element: object) => {
+                    return {
+                        'type': 'array',
+                        'items': element,
                     }
+                },
+                'object': ({ description, allowAdditionalProperties }, fields: object, options) => {
+                    return {
+                        'type': 'object',
+                        'properties': fields,
+                        'required': options.required,
+                        'additionalProperties': allowAdditionalProperties ?? false,
+                        ...(description && { description }),
+                    }
+                },
+                'boolean': ({ description }) => ({ 'type': 'boolean', ...(description && { description }) }),
+                'number': ({ description }) => ({ 'type': 'number', ...(description && { description }) }),
+                'string': ({ description }) => ({ 'type': 'string', ...(description && { description }) }),
+                'enum': ({ enum: chocies }) => {
+                    return {
+                        'type': 'string',
+                        'enum': chocies,
+                    }
+                },
+            });
+
+            return {
+                'type': 'json_schema',
+                'json_schema': {
+                    'name': responseFormat.name,
+                    'strict': true,
+                    'schema': schema,
                 }
             }
         }
