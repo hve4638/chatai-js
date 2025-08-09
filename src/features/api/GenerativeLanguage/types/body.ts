@@ -35,11 +35,17 @@ export type GenerativeLanguageMessagePart = (
 )
 
 export type SafetySettings = {
-    category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT' | 'HARM_CATEGORY_HATE_SPEECH' | 'HARM_CATEGORY_HARASSMENT' | 'HARM_CATEGORY_DANGEROUS_CONTENT';
+    category: (
+        'HARM_CATEGORY_HARASSMENT'
+        | 'HARM_CATEGORY_HATE_SPEECH'
+        | 'HARM_CATEGORY_SEXUALLY_EXPLICIT'
+        | 'HARM_CATEGORY_DANGEROUS_CONTENT'
+        | 'HARM_CATEGORY_CIVIC_INTEGRITY'
+    );
     threshold: SafetyFilterThreshold;
 }[];
 
-export type SafetyFilterThreshold = 'BLOCK_NONE' | 'BLOCK_ONLY_HIGH' | 'BLOCK_MEDIUM_AND_ABOVE' | 'BLOCK_LOW_AND_ABOVE' | 'HARM_BLOCK_THRESHOLD_UNSPECIFIED';
+export type SafetyFilterThreshold = 'OFF' | 'BLOCK_NONE' | 'BLOCK_ONLY_HIGH' | 'BLOCK_MEDIUM_AND_ABOVE' | 'BLOCK_LOW_AND_ABOVE' | 'HARM_BLOCK_THRESHOLD_UNSPECIFIED';
 
 // url: https://ai.google.dev/gemini-api/docs/thinking?hl=ko
 export type ThinkingConfig = {

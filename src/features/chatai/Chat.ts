@@ -24,7 +24,6 @@ export const Chat = {
                 chatType: ChatType.ImageBase64,
                 data: base64,
                 extension: guessImageExtFromBase64(base64),
-                //image: `data:image/jpeg;base64,${base64}`
             };
         },
         From(target: string): ChatContentPart {
@@ -44,7 +43,7 @@ export const Chat = {
                 url: url
             };
         },
-        Base64(filename:string, base64: string): ChatContentPart {
+        Base64(filename: string, base64: string): ChatContentPart {
             return {
                 chatType: ChatType.PDFBase64,
                 filename: filename,
@@ -57,6 +56,20 @@ export const Chat = {
 
             return {
                 chatType: ChatType.PDFBase64,
+                filename: filename,
+                data: base64
+            };
+        }
+    },
+
+    File: {
+        From(target: string): ChatContentPart {
+            const base64 = fs.readFileSync(target, 'base64');
+            const filename = path.basename(target);
+
+            return {
+                chatType: ChatType.File,
+                mime: 'application/pdf',
                 filename: filename,
                 data: base64
             };

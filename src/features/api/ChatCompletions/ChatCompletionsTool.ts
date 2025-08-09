@@ -70,6 +70,15 @@ class ChatCompletionsTool {
                         }
                     });
                 }
+                else if (chat.chatType === ChatType.File) {
+                    chatBlock.content.push({
+                        type: 'file',
+                        file: {
+                            filename: chat.filename,
+                            file_data: `data:${chat.mime};base64,${chat.data}`
+                        }
+                    });
+                }
                 else {
                     const unhandledType = (chat as any)?.chatType;
                     throw new ModelUnsupportError(`Chat Completion API does not support chatType: ${unhandledType}`);

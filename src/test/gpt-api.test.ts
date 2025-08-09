@@ -148,6 +148,47 @@ const hasApiKey = !!process.env['OPENAI_KEY'];
         expect(answer).toContain('5'); // 10/2
     });
 
+    
+    test('fetch: file', async () => {
+        // Text 내용
+        // 1. 1+1=?
+        // 2. 2+4=?
+        // 3. 4*4=?
+        // 4. 10/2=?
+        const target = './.test/math.md';
+
+        const result = await ChatAI.requestChatCompletion({
+            messages: [
+                ChatRole.User(
+                    Chat.PDF.From(target),
+                    Chat.Text("Answer the questions provided."),
+                )
+            ],
+            model: 'gpt-4o-mini-2024-07-18',
+            auth: {
+                api_key: apiKey
+            },
+            max_tokens: 1024,
+            temperature: 0.1,
+        });
+
+        const { request, response } = result;
+        expect(request.url).toEqual('https://api.openai.com/v1/chat/completions');
+        expect(request.headers).toEqual({
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer SECRET`
+        });
+        expect(response.ok).toBe(true);
+        expect(response.http_status).toBe(200);
+        expect(response.finish_reason).toBe(FinishReason.End);
+
+        const answer = response.content[0].trim().toLowerCase();
+        expect(answer).toContain('2'); // 1+1
+        expect(answer).toContain('6'); // 2+4
+        expect(answer).toContain('16'); // 4*4
+        expect(answer).toContain('5'); // 10/2
+    });
+
     test('fetch: thinking', async () => {
         const result = await ChatAI.requestChatCompletion({
             messages: [
