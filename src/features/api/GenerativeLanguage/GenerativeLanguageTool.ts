@@ -35,7 +35,7 @@ class GenerativeLanguageTool {
             generationConfig.thinkingConfig ??= {}
             generationConfig.thinkingConfig.includeThoughts = request.thinking_summary;
         }
-        if (request.thinking_tokens) {
+        if (request.thinking_tokens != null) {
             generationConfig.thinkingConfig ??= {}
             generationConfig.thinkingConfig.thinkingBudget = request.thinking_tokens;
         }

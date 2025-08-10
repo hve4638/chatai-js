@@ -79,7 +79,7 @@ const hasApiKey = !!process.env['OPENAI_KEY'];
     });
 
     test('fetch: vision', async () => {
-        const target = './.test/target.png';
+        const target = './.test/target.jpg';
 
         const result = await ChatAI.requestChatCompletion({
             messages: [
