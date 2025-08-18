@@ -4,6 +4,9 @@ export interface BaseRequest {
     /** 미지정시 기본 URL 사용 */
     url?: string;
 
+    /** 추가 요청 헤더 */
+    headers?: Record<string, string>;
+
     model: string;
     messages: ChatMessages;
 

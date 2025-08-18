@@ -72,6 +72,25 @@ describe('ClaudeEndpoint request form', () => {
         const actual = await api.makeRequestConfig();
         expect(actual).toEqual(expected);
     });
+    
+    test('valid header with extra', async () => {
+        const expected = {
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': 'api-key',
+                'anthropic-version': '2023-06-01',
+                'x-extra-header': 'extra-value'
+            }
+        }
+        const api = new AnthropicAPI({
+            ...body,
+            headers: {
+                'x-extra-header': 'extra-value'
+            }
+        }, option);
+        const actual = await api.makeRequestConfig();
+        expect(actual).toEqual(expected);
+    });
 });
 
 describe('AnthropicAPI stream', () => {

@@ -16,10 +16,11 @@ import Channel from '@hve/channel'
 
 class VertexAIAPI extends BaseChatAIRequestAPI<VertexAIData> {
     static readonly DEFAULT_URL = 'https://{{location}}-aiplatform.googleapis.com';
+    static readonly DEFAULT_GLOBAL_URL = 'https://aiplatform.googleapis.com';
     static readonly DEFAULT_PATH_RAWPREDICT = '/v1/projects/{{projectid}}/locations/{{location}}/publishers/{{publisher}}/models/{{model}}:rawPredict';
     static readonly DEFAULT_PATH_GENERATE = '/v1/projects/{{projectid}}/locations/{{location}}/publishers/{{publisher}}/models/{{model}}:generateContent';
     static readonly DEFAULT_PATH = '/v1/projects/{{projectid}}/locations/{{location}}/publishers/{{publisher}}/models/{{model}}';
-    
+
     // static readonly LOCATION = 'us-east5';
     static readonly LOCATION = 'us-central1';
     private static tokenCache: Map<string, string> = new Map();
@@ -65,7 +66,7 @@ class VertexAIAPI extends BaseChatAIRequestAPI<VertexAIData> {
     }
     private async getToken() {
         if (this.masked) return 'SECRET';
-        
+
         const key = this.getTokenCacheKey();
         if (!VertexAIAPI.tokenCache.has(key)) {
             await this.refreshToken();
@@ -80,7 +81,14 @@ class VertexAIAPI extends BaseChatAIRequestAPI<VertexAIData> {
     }
 
     async makeRequestURL() {
-        const url = bracketFormat(VertexAIAPI.DEFAULT_URL + VertexAIAPI.DEFAULT_PATH, {
+        const baseUrl = (
+            this.body.location === 'global'
+                ? VertexAIAPI.DEFAULT_GLOBAL_URL
+                : VertexAIAPI.DEFAULT_URL
+        )
+
+        // DEFAULT_GLOBAL_URL
+        const url = bracketFormat(baseUrl + VertexAIAPI.DEFAULT_PATH, {
             location: this.body.location,
             projectid: this.body.auth.project_id,
             model: this.body.model,
@@ -98,11 +106,15 @@ class VertexAIAPI extends BaseChatAIRequestAPI<VertexAIData> {
     }
     async makeRequestConfig() {
         const token = await this.getToken();
+
+        const extraHeaders = this.body.headers ?? {}
+
         return {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
-                'charset': 'utf-8'
+                'charset': 'utf-8',
+                ...extraHeaders,
             }
         };
     }

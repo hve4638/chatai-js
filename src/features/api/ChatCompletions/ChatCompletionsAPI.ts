@@ -36,11 +36,14 @@ class ChatCompletionsAPI extends BaseChatAIRequestAPI<ChatCompletionsData> {
         return this.body.url ?? ChatCompletionsAPI.DEFAULT_BASE_URL;
     }
     async makeRequestConfig(): Promise<AxiosRequestConfig<any>> {
-        assertFieldExists(this.body.auth.api_key, 'secret.api_key');
+        assertFieldExists(this.body.auth.api_key, 'auth.api_key');
+
+        const extraHeaders = this.body.headers ?? {}
 
         const headers = {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.body.auth.api_key}`
+            'Authorization': `Bearer ${this.body.auth.api_key}`,
+            ...extraHeaders
         }
         if (this.option.stream) {
             return { headers, responseType: 'stream' };

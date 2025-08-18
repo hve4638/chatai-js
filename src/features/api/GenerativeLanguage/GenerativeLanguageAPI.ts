@@ -68,8 +68,11 @@ class GenerativeLanguageAPI extends BaseChatAIRequestAPI<GenerativeLanguageData>
         return url;
     }
     async makeRequestConfig(): Promise<AxiosRequestConfig<any>> {
+        const extraHeaders = this.body.headers ?? {}
+
         const headers = {
             'Content-Type': 'application/json',
+            ...extraHeaders,
         }
         if (this.option.stream) {
             return { headers, responseType: 'stream' };

@@ -42,10 +42,13 @@ class AnthropicAPI extends BaseChatAIRequestAPI<AnthropicData> {
     }
 
     async makeRequestConfig(): Promise<AxiosRequestConfig<any>> {
+        const extraHeaders = this.body.headers ?? {}
+
         const headers = {
             'Content-Type': 'application/json',
             'x-api-key': this.body.auth.api_key,
-            'anthropic-version': '2023-06-01'
+            'anthropic-version': '2023-06-01',
+            ...extraHeaders,
         };
         if (this.option.stream) {
             return { headers, responseType: 'stream' };

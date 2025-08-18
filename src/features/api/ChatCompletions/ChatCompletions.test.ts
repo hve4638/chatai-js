@@ -82,6 +82,23 @@ describe('ChatCompletions : transform ChatAIRequestForm', () => {
         const actual = await api.makeRequestConfig();
         expect(actual).toEqual(expected);
     });
+    test('valid header with extra', async () => {
+        const expected = {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer api-key`,
+                'x-extra-header': 'extra-value'
+            }
+        }
+        const api = new ChatCompletionsAPI({
+            ...body,
+            headers: {
+                'x-extra-header': 'extra-value'
+            }
+        }, option);
+        const actual = await api.makeRequestConfig();
+        expect(actual).toEqual(expected);
+    });
 });
 
 describe('ChatCompletionsAPI stream', () => {

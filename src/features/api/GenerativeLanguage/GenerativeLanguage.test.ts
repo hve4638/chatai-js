@@ -87,6 +87,23 @@ describe('GenerativeLanguage : request form', () => {
         const actual = await api.makeRequestConfig();
         expect(actual).toEqual(expected);
     });
+    test('valid header with extra', async () => {
+        const expected = {
+            headers : {
+                'Content-Type': 'application/json',
+                'x-extra-header': 'extra-value'
+            }
+        }
+        
+        const api = new GenerativeLanguageAPI({
+            ...form,
+            headers: {
+                'x-extra-header': 'extra-value'
+            }
+        }, option);
+        const actual = await api.makeRequestConfig();
+        expect(actual).toEqual(expected);
+    });
 });
 
 
