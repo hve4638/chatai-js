@@ -12,7 +12,7 @@ export interface ResponsesBody {
 
     previous_response_id?: string; // 도구 호출 후 이전 추론 및 대화를 유지하며 호출 시 사용
     reasoning?: { // 추론 옵션 (o-시리즈 한정)
-        effort?: 'low' | 'medium' | 'high';
+        effort?: 'minimal' | 'low' | 'medium' | 'high';
         /** @deprecated */
         generate_summary?: 'auto' | 'concise' | 'detailed';
         summary?: 'auto' | 'concise' | 'detailed';

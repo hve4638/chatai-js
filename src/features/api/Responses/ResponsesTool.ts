@@ -21,6 +21,13 @@ class ResponsesTool {
             body.reasoning.effort = request.thinking_effort;
         }
 
+        if (request.verbosity) {
+            body.text ??= {
+                type: 'text',
+                verbosity: request.verbosity,
+            };
+        }
+
         if (option.stream) {
             body.stream = true;
         }

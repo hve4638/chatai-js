@@ -9,6 +9,6 @@ export interface ResponsesRequest extends BaseRequest {
 
     thinking_effort?: 'minimal' | 'low' | 'medium' | 'high';
     thinking_summary?: 'auto' | 'concise' | 'detailed';
-    verbosity: 'low' | 'medium' | 'high';
+    verbosity?: 'low' | 'medium' | 'high';
 }
 export interface ResponsesData extends ResponsesRequest, APIKeyAuth { }
