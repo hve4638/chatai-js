@@ -37,8 +37,10 @@ export type ResponsesMessages = {
 
 export type ResponsesResponseFormat = {
     type: 'text';
+    verbosity: 'low' | 'medium' | 'high';
 } | {
     type: 'json_object';
+    verbosity: 'low' | 'medium' | 'high';
 } | {
     type: 'json_schema';
     json_schema: {
@@ -46,4 +48,5 @@ export type ResponsesResponseFormat = {
         strict: boolean;
         schema: any;
     }
+    verbosity: 'low' | 'medium' | 'high';
 }

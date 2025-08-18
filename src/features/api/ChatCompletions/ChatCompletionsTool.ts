@@ -16,9 +16,11 @@ class ChatCompletionsTool {
             max_completion_tokens: request.max_tokens ?? 1024,
         }
 
-        if (request.thinking_effort) body.reasoning_effort = request.thinking_effort;
         if (request.temperature) body.temperature = request.temperature;
         if (request.top_p) body.top_p = request.top_p;
+        if (request.thinking_effort) body.reasoning_effort = request.thinking_effort;
+        if (request.verbosity) body.verbosity = request.verbosity;
+
         if (option.stream) {
             body.stream = true;
             body.stream_options = { include_usage: true };

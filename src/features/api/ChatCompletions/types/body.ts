@@ -19,8 +19,9 @@ export interface ChatCompletionsBody {
     stream_options?: {
         include_usage?: boolean;
     }
-    reasoning_effort?: 'low' | 'medium' | 'high';
+    reasoning_effort?: 'minimal' | 'low' | 'medium' | 'high';
     response_format?: ChatCompletionsBodyResponseFormat;
+    verbosity?: 'low' | 'medium' | 'high';
 }
 
 export type ChatCompletionsMessages = {

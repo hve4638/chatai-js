@@ -6,7 +6,8 @@ export type ChatCompletionsAllowedResponseFormat = TextFormat | JSONObjectFormat
 export interface ChatCompletionsRequest extends BaseRequest {
     top_p?: number;
     top_k?: number;
-    thinking_effort?: 'low' | 'medium' | 'high';
+    thinking_effort?: 'minimal' | 'low' | 'medium' | 'high';
     response_format?: ChatCompletionsAllowedResponseFormat;
+    verbosity?: 'low' | 'medium' | 'high';
 }
 export interface ChatCompletionsData extends ChatCompletionsRequest, APIKeyAuth { }

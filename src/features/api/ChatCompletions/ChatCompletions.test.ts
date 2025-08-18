@@ -1,9 +1,7 @@
 import ChatCompletionsAPI, { type ChatCompletionsData } from '.'
 
 import { user, assistant, system } from '@/test/utils'
-import { AsyncQueue } from '@/utils';
 import Channel from '@hve/channel';
-
 
 describe('ChatCompletions : transform ChatAIRequestForm', () => {
     const body: ChatCompletionsData = {
@@ -16,6 +14,7 @@ describe('ChatCompletions : transform ChatAIRequestForm', () => {
         temperature: 1.2,
         max_tokens: 512,
         top_p: 0.8,
+        verbosity: 'medium',
         messages: [
             system('system-message'),
             user('user-message'),
@@ -63,6 +62,7 @@ describe('ChatCompletions : transform ChatAIRequestForm', () => {
                     ]
                 }
             ],
+            verbosity: 'medium',
             max_completion_tokens: 512,
             temperature: 1.2,
             top_p: 0.8,
